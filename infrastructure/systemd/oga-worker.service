@@ -1,0 +1,15 @@
+[Unit]
+Description=OGA LMS Asynchronous Task Worker
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/ourgray
+ExecStart=/usr/bin/python3 src/backend/tasks.py
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

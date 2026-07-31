@@ -1,0 +1,30 @@
+name: OGA LMS Production Deployment Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies & Build Next.js
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy Artifacts to AWS EC2 Processing Node
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          echo "Syncing build artifacts and async worker to production instance..."
