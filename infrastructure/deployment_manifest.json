@@ -1,0 +1,8 @@
+{
+  "project": "OGA LMS Enterprise AppFabric",
+  "instance_id": "i-03559ca8388d4a83c",
+  "public_ip": "34.229.216.240",
+  "security_group_id": "sg-0f2a1067019e749aa",
+  "domain": "lms.ogacounselingcenter.com",
+  "status": "PROVISIONED"
+}
