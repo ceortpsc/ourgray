@@ -1,0 +1,15 @@
+[Unit]
+Description=OGA LMS Parallel Execution Engine Matrix
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/ourgray
+ExecStart=/usr/bin/python3 src/backend/parallel_worker_matrix.py
+Restart=always
+RestartSec=3
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
