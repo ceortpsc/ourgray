@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="The Great Gray Horizon Counseling Center distance-learning and supervised AI simulation portal." />
+  <title>Great Gray Horizon Learning Portal</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./learning-portal.css" />
+</head>
+<body>
+  <div class="learning-shell">
+    <header class="learning-header">
+      <div class="learning-brand">
+        <div class="brand-mark">GGH</div>
+        <div>
+          <p class="eyebrow">Powered by Ross Tax Pro Software Co.</p>
+          <h1>The Great Gray Horizon Learning Portal</h1>
+          <p>Illuminating Pathways Beyond the Gray Horizon.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label>Active role
+          <select id="learning-role"></select>
+        </label>
+        <a class="button secondary" href="./index.html">Operations Portal</a>
+      </div>
+    </header>
+
+    <nav class="classroom-tabs" id="learning-tabs" aria-label="Learning portal sections"></nav>
+
+    <main class="learning-main">
+      <section class="hero-panel">
+        <div>
+          <span class="badge ok">DISTANCE LEARNING</span>
+          <h2>Supervised AI-assisted learning for clinicians, students, administrators and auditors</h2>
+          <p>Interactive simulations, course workspaces, workflow automation and evidence-ready audit records operate under human review and role-based access controls.</p>
+          <div class="hero-actions">
+            <button class="button" id="enroll-now">Enroll Now</button>
+            <button class="button secondary" id="launch-sandbox">Launch Realtime AI Sandbox</button>
+          </div>
+        </div>
+        <aside class="safety-card">
+          <strong>Educational-use boundary</strong>
+          <p>Simulations are training tools. Human instructors retain authority over grades, clinical competency, policy decisions and any action affecting a learner.</p>
+        </aside>
+      </section>
+
+      <section id="learning-alert" aria-live="polite"></section>
+      <section id="learning-metrics" class="grid grid-4"></section>
+
+      <section class="workspace-grid">
+        <article class="card">
+          <div class="section-title"><h2>Active module</h2><span id="module-status"></span></div>
+          <div id="active-module"></div>
+        </article>
+        <article class="card facilitator-card">
+          <div class="section-title"><h2>AI facilitator</h2><span class="badge warn">HUMAN REVIEW</span></div>
+          <div id="facilitator-panel"></div>
+        </article>
+      </section>
+
+      <section class="card">
+        <div class="section-title"><h2>Enrollment and provisioning workflow</h2><span id="workflow-state"></span></div>
+        <div id="workflow-track" class="workflow-track"></div>
+        <div class="workflow-actions">
+          <button class="button secondary" data-action="payment">Verify demo payment</button>
+          <button class="button secondary" data-action="approve">Approve enrollment</button>
+          <button class="button secondary" data-action="identity">Record Entra identity</button>
+          <button class="button secondary" data-action="workspace">Activate LMS workspace</button>
+        </div>
+      </section>
+
+      <section class="grid grid-2">
+        <article class="card">
+          <div class="section-title"><h2>Open tasks</h2><span id="task-count"></span></div>
+          <div id="task-list"></div>
+        </article>
+        <article class="card">
+          <div class="section-title"><h2>Immutable evidence preview</h2><button class="button compact" id="export-evidence">Export JSON</button></div>
+          <div id="audit-list" class="audit-list"></div>
+        </article>
+      </section>
+
+      <section class="card" id="role-matrix-section">
+        <div class="section-title"><h2>Role-based access matrix</h2><span class="role-pill">RBAC</span></div>
+        <div id="role-matrix" class="table-wrap"></div>
+      </section>
+
+      <p class="footer-note">Leadership and credential information displayed by this portal is administrator-provided. Professional credentials and licenses must be independently verified before public representation or assignment of regulated responsibilities.</p>
+    </main>
+  </div>
+  <script src="./learning-portal.js" type="module"></script>
+</body>
+</html>
