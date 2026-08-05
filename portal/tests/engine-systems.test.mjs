@@ -75,7 +75,7 @@ test('telemetry redacts sensitive fields', () => {
 
 test('AI assist blocks prohibited decisions and requires human approval', async () => {
   const ai = new AIAssistEngine({ requireHumanApproval: true });
-  assert.throws(() => ai.request({
+  await assert.rejects(ai.request({
     useCase: 'autonomous-employment-decision',
     input: {},
     actor: 'hr@example.com',
