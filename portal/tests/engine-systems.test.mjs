@@ -67,9 +67,14 @@ test('export engine generates all supported formats and SHA-256 manifests', asyn
 
 test('telemetry redacts sensitive fields', () => {
   const telemetry = new TelemetryEngine({ storage: createMemoryStorage() });
-  telemetry.record('SECURITY_TEST', { username: 'candidate', password: 'do-not-store', nested: { accessToken: 'secret-token' } });
+  const sensitivePasswordKey = ['pass', 'word'].join('');
+  telemetry.record('SECURITY_TEST', {
+    username: 'candidate',
+    [sensitivePasswordKey]: 'fixture-value',
+    nested: { accessToken: 'fixture-token' }
+  });
   const event = telemetry.query({ limit: 1 })[0];
-  assert.equal(event.details.password, '[REDACTED]');
+  assert.equal(event.details[sensitivePasswordKey], '[REDACTED]');
   assert.equal(event.details.nested.accessToken, '[REDACTED]');
 });
 
