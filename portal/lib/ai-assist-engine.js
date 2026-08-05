@@ -186,7 +186,7 @@ export class AIAssistEngine {
   }
 
   list() {
-    return this.requests.map(structuredClone);
+    return this.requests.map(request => structuredClone(request));
   }
 
   #emit(event, details) {
