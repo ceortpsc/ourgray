@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Workflow, export, telemetry, health and AI-assist operations center for The Great Gray Horizon Counseling Center." />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Platform Engine Operations | Great Gray Horizon</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./operations-engine.css" />
+</head>
+<body>
+  <div class="operations-shell">
+    <header class="operations-header">
+      <div class="brand">
+        <div class="brand-mark">GGH</div>
+        <div><strong>The Great Gray Horizon Counseling Center</strong><span>Platform Engine Operations</span></div>
+      </div>
+      <div class="actions">
+        <a class="button secondary" href="./index.html">Corporate Portal</a>
+        <a class="button secondary" href="./candidate-access.html">Candidate Access</a>
+        <span class="status-chip">CONTROLLED DEMONSTRATION</span>
+      </div>
+    </header>
+
+    <main class="operations-main">
+      <section class="operations-hero">
+        <div>
+          <p class="eyebrow">Powered by Ross Tax Pro Software Co.</p>
+          <h1>Workflow, Export, Telemetry and AI-Assist Engine Center</h1>
+          <p>Queue deterministic work, generate portable reports, inspect health, review telemetry, and stage policy-gated AI assistance.</p>
+        </div>
+        <div class="operations-boundary">
+          <strong>Production boundary</strong>
+          <p>This interface does not contain secrets, perform autonomous employment decisions, or replace server authorization, durable queues, databases, or immutable audit storage.</p>
+        </div>
+      </section>
+
+      <section id="operations-alert" aria-live="polite"></section>
+      <section id="operations-metrics" class="grid grid-4"></section>
+
+      <div class="section-title"><h2>Engine health</h2><button class="button secondary" id="refresh-health" type="button">Refresh health</button></div>
+      <section id="health-grid" class="grid grid-4"></section>
+
+      <div class="section-title"><h2>Queue production work</h2></div>
+      <section class="grid grid-3 operations-controls">
+        <form id="export-job-form" class="card operations-form">
+          <h3>Global export job</h3>
+          <label>Export name<input name="name" value="Candidate Operations Snapshot" required /></label>
+          <label>Format<select name="format"><option value="json">JSON</option><option value="csv">CSV</option><option value="ndjson">NDJSON</option><option value="xhtml">XHTML</option></select></label>
+          <label>Sample record count<input name="count" type="number" min="1" max="100" value="5" /></label>
+          <button class="button" type="submit">Queue export</button>
+        </form>
+
+        <form id="ai-job-form" class="card operations-form">
+          <h3>AI-assist request</h3>
+          <label>Approved use case<select name="useCase"><option value="workflow-recommendation">Workflow recommendation</option><option value="summarization">Summarization</option><option value="classification">Classification</option><option value="data-quality-review">Data-quality review</option><option value="drafting">Drafting</option></select></label>
+          <label>Business purpose<input name="purpose" value="Operations-center demonstration" required /></label>
+          <label>Input<textarea name="input" rows="5">Application status: ACTION_REQUIRED
+Incomplete gates: credential verification, references</textarea></label>
+          <button class="button" type="submit">Queue AI assist</button>
+        </form>
+
+        <form id="notification-job-form" class="card operations-form">
+          <h3>Workflow notification</h3>
+          <label>Recipient<input name="recipient" type="email" value="candidate@example.com" required /></label>
+          <label>Subject<input name="subject" value="Candidate application action required" required /></label>
+          <label>Channel<select name="channel"><option value="IN_APP">In-app</option><option value="EMAIL">Email provider adapter</option><option value="SMS">SMS provider adapter</option></select></label>
+          <button class="button" type="submit">Queue notification</button>
+        </form>
+      </section>
+
+      <div class="operations-actions">
+        <button class="button success-button" id="run-queue" type="button">Run queued jobs</button>
+        <button class="button secondary" id="export-dashboard" type="button">Export engine dashboard</button>
+        <button class="button secondary" id="clear-telemetry" type="button">Clear local telemetry</button>
+      </div>
+
+      <div class="section-title"><h2>Job registry</h2></div>
+      <section class="card table-wrap"><table><thead><tr><th>Job ID</th><th>Type</th><th>State</th><th>Priority</th><th>Attempts</th><th>Updated</th></tr></thead><tbody id="jobs-table"></tbody></table></section>
+
+      <div class="section-title"><h2>AI-assist human review queue</h2></div>
+      <section id="ai-review-list" class="grid grid-2"></section>
+
+      <div class="section-title"><h2>Export registry</h2></div>
+      <section id="export-list" class="grid grid-2"></section>
+
+      <div class="section-title"><h2>Telemetry events</h2></div>
+      <section id="telemetry-list" class="card event-stream"></section>
+
+      <p class="footer-note">For production, connect the same interfaces to an authenticated API, PostgreSQL or DynamoDB, a durable queue, encrypted object storage, immutable audit retention, and approved provider adapters.</p>
+    </main>
+  </div>
+  <script src="./operations-engine.js" type="module"></script>
+</body>
+</html>
