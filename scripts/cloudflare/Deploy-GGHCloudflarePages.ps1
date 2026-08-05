@@ -12,7 +12,7 @@ API token is written into source control by this script.
 param(
     [string]$ProjectName = 'great-gray-horizon',
     [string]$Directory = 'portal',
-    [string]$ProductionBranch = 'feature-ggh-candidate-portal-v3',
+    [string]$ProductionBranch = 'feature/ggh-candidate-portal-v3',
     [switch]$SkipLogin,
     [switch]$SkipInstall,
     [switch]$PreviewOnly
