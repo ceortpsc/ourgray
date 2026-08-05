@@ -5,13 +5,15 @@ on:
     branches: [main, feature/ggh-candidate-portal-v3]
     paths:
       - 'portal/**'
-      - 'scripts/m365/**'
+      - 'scripts/**'
+      - 'docs/**'
       - 'package.json'
       - '.github/workflows/portal-pages.yml'
   pull_request:
     paths:
       - 'portal/**'
-      - 'scripts/m365/**'
+      - 'scripts/**'
+      - 'docs/**'
       - 'package.json'
 
 permissions:
@@ -36,28 +38,58 @@ jobs:
           test -f portal/index.html
           test -f portal/app.js
           test -f portal/styles.css
+          test -f portal/candidate-access.html
+          test -f portal/candidate-access.css
+          test -f portal/candidate-access.js
           test -f portal/onboarding-admin.html
           test -f portal/onboarding-admin.css
           test -f portal/onboarding-admin.js
+          test -f portal/operations-engine.html
+          test -f portal/operations-engine.css
+          test -f portal/operations-engine.js
           test -f portal/tenant-bootstrap.js
+          test -f portal/data/seed.json
           test -f portal/data/tenant-profile.json
+          test -f portal/data/candidate-access-config.json
+          test -f portal/data/engine-config.json
           test -f portal/lib/id-engine.js
           test -f portal/lib/rbac.js
+          test -f portal/lib/application-engine.js
+          test -f portal/lib/oauth-pkce.js
+          test -f portal/lib/job-engine.js
+          test -f portal/lib/export-engine.js
+          test -f portal/lib/telemetry-engine.js
+          test -f portal/lib/ai-assist-engine.js
+          test -f portal/lib/platform-engine.js
           test -f portal/embed/ggh-candidate-portal.js
           test -f scripts/m365/Get-GGHTenantReadiness.ps1
+          test -f scripts/m365/Get-GGHTenantReadiness-AzCli.ps1
           test -f scripts/m365/Initialize-GGHTenantAccessGroups.ps1
+          test -f scripts/m365/Initialize-GGHCandidatePortalApp.ps1
           test -f scripts/m365/Provision-GGHEmployee.ps1
           test -f scripts/m365/Enable-GGHEmployeeAccess.ps1
+          test -f scripts/cloudflare/Deploy-GGHCloudflarePages.ps1
           python -m json.tool portal/data/seed.json >/dev/null
           python -m json.tool portal/data/tenant-profile.json >/dev/null
+          python -m json.tool portal/data/candidate-access-config.json >/dev/null
+          python -m json.tool portal/data/engine-config.json >/dev/null
           node --check portal/app.js
+          node --check portal/candidate-access.js
           node --check portal/onboarding-admin.js
+          node --check portal/operations-engine.js
           node --check portal/tenant-bootstrap.js
-      - name: Parse PowerShell onboarding scripts
+          node --check portal/lib/application-engine.js
+          node --check portal/lib/oauth-pkce.js
+          node --check portal/lib/job-engine.js
+          node --check portal/lib/export-engine.js
+          node --check portal/lib/telemetry-engine.js
+          node --check portal/lib/ai-assist-engine.js
+          node --check portal/lib/platform-engine.js
+      - name: Parse PowerShell scripts
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $files = Get-ChildItem -Path scripts/m365 -Filter '*.ps1'
+          $files = Get-ChildItem -Path scripts -Filter '*.ps1' -Recurse
           foreach ($file in $files) {
             $tokens = $null
             $errors = $null
@@ -65,9 +97,9 @@ jobs:
             if ($errors.Count -gt 0) {
               $errors | Format-List | Out-String | Write-Error
             }
-            Write-Host "Parsed $($file.Name)"
+            Write-Host "Parsed $($file.FullName)"
           }
-      - name: Run identifier engine tests
+      - name: Run portal engine tests
         run: npm run test:portal
       - name: Scan for committed secrets
         run: |
@@ -77,7 +109,7 @@ jobs:
 
           pattern = re.compile(r'(api[_-]?key|client[_-]?secret|password)\s*[:=]\s*["\'][^"\']+', re.I)
           findings = []
-          for root in (Path('portal'), Path('scripts/m365')):
+          for root in (Path('portal'), Path('scripts')):
               for path in root.rglob('*'):
                   if not path.is_file() or path.name == 'README.md':
                       continue
