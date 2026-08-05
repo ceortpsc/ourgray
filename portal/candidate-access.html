@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Secure candidate application access for The Great Gray Horizon Counseling Center, powered by Ross Tax Pro Software Co." />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Candidate Application Access | The Great Gray Horizon</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./candidate-access.css" />
+</head>
+<body>
+  <div class="candidate-shell">
+    <header class="candidate-header">
+      <a class="candidate-brand" href="./candidate-access.html" aria-label="Candidate access home">
+        <span class="brand-mark">GGH</span>
+        <span><strong>The Great Gray Horizon Counseling Center</strong><small>Candidate Application &amp; Access Center</small></span>
+      </a>
+      <div class="header-actions">
+        <a class="button secondary" href="./index.html">Corporate Portal</a>
+        <span class="status-chip">SECURE ACCESS GATE</span>
+      </div>
+    </header>
+
+    <main class="candidate-main">
+      <section class="hero-card">
+        <div>
+          <p class="eyebrow">Powered by Ross Tax Pro Software Co.</p>
+          <h1>Begin or continue your application</h1>
+          <p>Register an application, verify your identity through Microsoft OAuth 2.0 with PKCE, complete required sections, monitor tasks, and submit the file for employer review.</p>
+        </div>
+        <div class="hero-security">
+          <strong>Privacy control</strong>
+          <p>Do not enter Social Security numbers, banking information, passwords, medical records, or government-ID images into this browser interface.</p>
+        </div>
+      </section>
+
+      <section id="candidate-alert" aria-live="polite"></section>
+
+      <nav class="candidate-tabs" aria-label="Candidate workflow">
+        <button class="active" data-view="access">Access</button>
+        <button data-view="application">Application</button>
+        <button data-view="tasks">Tasks &amp; Status</button>
+        <button data-view="help">Help &amp; Policies</button>
+      </nav>
+
+      <section id="access-view" class="candidate-view active">
+        <div class="grid grid-3 access-grid">
+          <article class="card access-card">
+            <span class="step-number">1</span>
+            <h2>Register</h2>
+            <p>Create an application record and receive an Application ID and Candidate ID.</p>
+            <form id="registration-form" class="candidate-form">
+              <label>First name<input name="firstName" autocomplete="given-name" required /></label>
+              <label>Last name<input name="lastName" autocomplete="family-name" required /></label>
+              <label>Email<input name="email" type="email" autocomplete="email" required /></label>
+              <label>Position interest<select name="positionInterest" required id="position-options"></select></label>
+              <label class="check-line"><input name="privacyAcknowledged" type="checkbox" required /> I acknowledge the privacy notice and understand that sensitive identifiers must not be entered here.</label>
+              <button class="button" type="submit">Create application</button>
+            </form>
+          </article>
+
+          <article class="card access-card">
+            <span class="step-number">2</span>
+            <h2>Continue application</h2>
+            <p>Resume a saved application on this browser by matching the Application ID and email address.</p>
+            <form id="continue-form" class="candidate-form">
+              <label>Application ID<input name="applicationId" class="mono" placeholder="GGH-APP-2026-..." required /></label>
+              <label>Email<input name="email" type="email" required /></label>
+              <button class="button" type="submit">Continue application</button>
+            </form>
+            <div class="local-only-note">Browser demonstration storage is device-specific. Production continuation requires the authenticated server API.</div>
+          </article>
+
+          <article class="card access-card">
+            <span class="step-number">3</span>
+            <h2>Verify identity</h2>
+            <p>Use Microsoft sign-in after an Application ID exists. Authentication does not automatically grant employer or administrative access.</p>
+            <div id="oauth-status" class="oauth-status"></div>
+            <button class="button" id="oauth-sign-in" type="button">Sign in with Microsoft</button>
+            <button class="button secondary" id="oauth-sign-out" type="button">End sign-in session</button>
+            <p class="local-only-note">OAuth must be configured with the deployed redirect URL and application client ID.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="application-view" class="candidate-view">
+        <div id="application-empty" class="empty-state">Register or continue an application to open the data-entry workflow.</div>
+        <div id="application-workspace" hidden>
+          <section class="application-banner card">
+            <div>
+              <p class="eyebrow">Active candidate file</p>
+              <h2 id="active-candidate-name"></h2>
+              <p><b>Application ID:</b> <span id="active-application-id" class="mono"></span></p>
+              <p><b>Candidate ID:</b> <span id="active-candidate-id" class="mono"></span></p>
+            </div>
+            <div class="completion-panel">
+              <strong id="completion-value">0%</strong>
+              <span>Candidate workflow completion</span>
+              <div class="progress"><span id="completion-bar"></span></div>
+            </div>
+          </section>
+
+          <form id="application-form" class="application-sections">
+            <fieldset class="card">
+              <legend>Profile and contact information</legend>
+              <div class="form-grid">
+                <label>Preferred name<input name="preferredName" /></label>
+                <label>Phone<input name="phone" type="tel" autocomplete="tel" required /></label>
+                <label>City<input name="city" autocomplete="address-level2" required /></label>
+                <label>State<input name="state" maxlength="2" autocomplete="address-level1" required /></label>
+                <label>Current employer<input name="currentEmployer" /></label>
+                <label>Current title<input name="currentTitle" /></label>
+                <label>Relevant years of experience<input name="yearsRelevantExperience" inputmode="numeric" /></label>
+                <label>Referral source<input name="referralSource" /></label>
+                <label class="span-2">Professional summary<textarea name="professionalSummary" rows="7" maxlength="5000" required></textarea></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="card">
+              <legend>Eligibility declarations</legend>
+              <div class="declaration-grid">
+                <label>Are you presently authorized to work in the United States?<select name="authorizedToWork" required><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select></label>
+                <label>Will you now or later require employment sponsorship?<select name="requiresSponsorship" required><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select></label>
+                <label>Can you perform the essential functions of the position with or without reasonable accommodation?<select name="canPerformEssentialFunctions" required><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select></label>
+                <label>Do you understand that professional credentials and work history may require verification?<select name="understandsCredentialVerification" required><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select></label>
+              </div>
+              <p class="policy-note">Do not describe a disability or medical condition here. Accommodation requests are handled separately by authorized personnel.</p>
+            </fieldset>
+
+            <fieldset class="card">
+              <legend>Disclosures and electronic records</legend>
+              <div class="disclosure-list">
+                <label class="check-line"><input name="privacyNoticeAcknowledged" type="checkbox" /> I acknowledge the candidate privacy notice and data-retention summary.</label>
+                <label class="check-line"><input name="accuracyAttestation" type="checkbox" /> I certify that the information supplied is complete and accurate to the best of my knowledge.</label>
+                <label class="check-line"><input name="electronicRecordsConsent" type="checkbox" /> I consent to receive and execute assigned candidate records electronically.</label>
+              </div>
+              <div class="callout">A background-screening authorization, if required, will be delivered as a separate standalone disclosure and authorization. This application page does not collect that authorization.</div>
+            </fieldset>
+
+            <fieldset class="card">
+              <legend>Document readiness checklist</legend>
+              <p>Mark each item when it is ready for secure upload. This static page does not store file bytes.</p>
+              <div class="document-grid">
+                <label>Resume or CV<select name="resume"><option value="NOT_PROVIDED">Not provided</option><option value="READY_FOR_UPLOAD">Ready for secure upload</option><option value="UPLOADED">Uploaded through approved provider</option><option value="VERIFIED">Verified</option></select></label>
+                <label>Professional license information<select name="professionalLicense"><option value="NOT_PROVIDED">Not provided</option><option value="READY_FOR_UPLOAD">Ready for secure upload</option><option value="UPLOADED">Uploaded through approved provider</option><option value="VERIFIED">Verified</option><option value="NOT_APPLICABLE">Not applicable</option></select></label>
+                <label>Education authorization<select name="educationAuthorization"><option value="NOT_PROVIDED">Not provided</option><option value="READY_FOR_UPLOAD">Ready for secure upload</option><option value="UPLOADED">Uploaded through approved provider</option><option value="VERIFIED">Verified</option></select></label>
+                <label>Professional references<select name="references"><option value="NOT_PROVIDED">Not provided</option><option value="READY_FOR_UPLOAD">Ready for secure upload</option><option value="UPLOADED">Uploaded through approved provider</option><option value="VERIFIED">Verified</option></select></label>
+              </div>
+            </fieldset>
+
+            <div class="application-actions">
+              <button class="button" type="submit">Save and evaluate gates</button>
+              <button class="button success-button" id="submit-application" type="button">Submit application</button>
+              <button class="button secondary" id="export-application" type="button">Export candidate copy</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="tasks-view" class="candidate-view">
+        <div class="grid grid-2">
+          <article class="card"><h2>Access gates</h2><div id="candidate-gates"></div></article>
+          <article class="card"><h2>Workflow tasks</h2><div id="candidate-tasks"></div></article>
+        </div>
+        <div class="section-title"><h2>Application event history</h2></div>
+        <section class="card"><div id="candidate-events"></div></section>
+      </section>
+
+      <section id="help-view" class="candidate-view">
+        <div class="grid grid-2">
+          <article class="card">
+            <h2>Application expectations</h2>
+            <ul class="policy-list">
+              <li>Provide accurate information and promptly correct errors.</li>
+              <li>Use only your own account and application record.</li>
+              <li>Do not upload or enter sensitive identifiers into unapproved fields.</li>
+              <li>Maintain confidentiality concerning company and candidate materials.</li>
+              <li>Respond to action requests by the stated deadline.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h2>Support and accessibility</h2>
+            <p>For access problems, identity mismatches, accommodations, or alternative document formats, contact:</p>
+            <p><a id="support-email" href="mailto:CEO@ROSSTAXSOFTWARE.COM">CEO@ROSSTAXSOFTWARE.COM</a></p>
+            <p>The application portal should not be used for emergencies, clinical communication, or submission of medical information.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="candidate-footer">
+      <strong>The Great Gray Horizon Counseling Center</strong><br />
+      Powered by Ross Tax Pro Software Co. | Innovator of All Things Software and Development<br />
+      Candidate access is subject to privacy, acceptable-use, identity, records-retention, and electronic-signature controls.
+    </footer>
+  </div>
+  <script src="./candidate-access.js" type="module"></script>
+</body>
+</html>
