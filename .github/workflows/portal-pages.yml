@@ -43,9 +43,24 @@ jobs:
         run: npm run test:portal
       - name: Scan for committed secrets
         run: |
-          if grep -RIE '(api[_-]?key|client[_-]?secret|password)[[:space:]]*[:=][[:space:]]*["'"'][^"'"']+' portal --exclude='README.md'; then
-            echo 'Potential secret detected'; exit 1
-          fi
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          pattern = re.compile(r'(api[_-]?key|client[_-]?secret|password)\s*[:=]\s*["\'][^"\']+', re.I)
+          findings = []
+          for path in Path('portal').rglob('*'):
+              if not path.is_file() or path.name == 'README.md':
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              if pattern.search(text):
+                  findings.append(str(path))
+          if findings:
+              raise SystemExit('Potential secret detected in: ' + ', '.join(findings))
+          PY
 
   pages-artifact:
     if: github.event_name == 'push'
