@@ -5,11 +5,13 @@ on:
     branches: [main, feature/ggh-candidate-portal-v3]
     paths:
       - 'portal/**'
+      - 'scripts/m365/**'
       - 'package.json'
       - '.github/workflows/portal-pages.yml'
   pull_request:
     paths:
       - 'portal/**'
+      - 'scripts/m365/**'
       - 'package.json'
 
 permissions:
@@ -34,11 +36,37 @@ jobs:
           test -f portal/index.html
           test -f portal/app.js
           test -f portal/styles.css
+          test -f portal/onboarding-admin.html
+          test -f portal/onboarding-admin.css
+          test -f portal/onboarding-admin.js
+          test -f portal/tenant-bootstrap.js
+          test -f portal/data/tenant-profile.json
           test -f portal/lib/id-engine.js
           test -f portal/lib/rbac.js
           test -f portal/embed/ggh-candidate-portal.js
+          test -f scripts/m365/Get-GGHTenantReadiness.ps1
+          test -f scripts/m365/Initialize-GGHTenantAccessGroups.ps1
+          test -f scripts/m365/Provision-GGHEmployee.ps1
+          test -f scripts/m365/Enable-GGHEmployeeAccess.ps1
           python -m json.tool portal/data/seed.json >/dev/null
+          python -m json.tool portal/data/tenant-profile.json >/dev/null
           node --check portal/app.js
+          node --check portal/onboarding-admin.js
+          node --check portal/tenant-bootstrap.js
+      - name: Parse PowerShell onboarding scripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $files = Get-ChildItem -Path scripts/m365 -Filter '*.ps1'
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | Format-List | Out-String | Write-Error
+            }
+            Write-Host "Parsed $($file.Name)"
+          }
       - name: Run identifier engine tests
         run: npm run test:portal
       - name: Scan for committed secrets
@@ -49,15 +77,16 @@ jobs:
 
           pattern = re.compile(r'(api[_-]?key|client[_-]?secret|password)\s*[:=]\s*["\'][^"\']+', re.I)
           findings = []
-          for path in Path('portal').rglob('*'):
-              if not path.is_file() or path.name == 'README.md':
-                  continue
-              try:
-                  text = path.read_text(encoding='utf-8')
-              except UnicodeDecodeError:
-                  continue
-              if pattern.search(text):
-                  findings.append(str(path))
+          for root in (Path('portal'), Path('scripts/m365')):
+              for path in root.rglob('*'):
+                  if not path.is_file() or path.name == 'README.md':
+                      continue
+                  try:
+                      text = path.read_text(encoding='utf-8')
+                  except UnicodeDecodeError:
+                      continue
+                  if pattern.search(text):
+                      findings.append(str(path))
           if findings:
               raise SystemExit('Potential secret detected in: ' + ', '.join(findings))
           PY
