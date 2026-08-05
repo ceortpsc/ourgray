@@ -5,10 +5,12 @@ on:
     branches: [main, feature/ggh-candidate-portal-v3]
     paths:
       - 'portal/**'
+      - 'package.json'
       - '.github/workflows/portal-pages.yml'
   pull_request:
     paths:
       - 'portal/**'
+      - 'package.json'
 
 permissions:
   contents: read
@@ -24,13 +26,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Validate required assets
         run: |
           test -f portal/index.html
           test -f portal/app.js
           test -f portal/styles.css
+          test -f portal/lib/id-engine.js
+          test -f portal/lib/rbac.js
           test -f portal/embed/ggh-candidate-portal.js
           python -m json.tool portal/data/seed.json >/dev/null
+          node --check portal/app.js
+      - name: Run identifier engine tests
+        run: npm run test:portal
       - name: Scan for committed secrets
         run: |
           if grep -RIE '(api[_-]?key|client[_-]?secret|password)[[:space:]]*[:=][[:space:]]*["'"'][^"'"']+' portal --exclude='README.md'; then
