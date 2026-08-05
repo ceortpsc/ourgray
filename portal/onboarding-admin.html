@@ -40,6 +40,13 @@
 
       <section id="onboarding-alert" aria-live="polite"></section>
 
+      <div class="section-title">
+        <h2>Connected Microsoft tenant profile</h2>
+        <span class="role-pill">ADMINISTRATOR PROVIDED</span>
+      </div>
+      <section id="tenant-capability-notice"></section>
+      <section class="tenant-summary" id="tenant-summary"></section>
+
       <section class="grid grid-4" id="onboarding-metrics"></section>
 
       <div class="section-title">
@@ -74,11 +81,11 @@
           <label>Mail alias<input name="alias" required /></label>
           <label>Corporate UPN / email<input name="corporateEmail" readonly /></label>
           <label>Usage location<input name="usageLocation" maxlength="2" required /></label>
-          <label>Microsoft 365 SKU part number<input name="skuPartNumber" placeholder="Example: SPE_E3" /></label>
-          <label class="span-2">Entra security or Microsoft 365 group object IDs<textarea name="groupIds" rows="4" placeholder="One group object ID per line"></textarea></label>
+          <label>Microsoft 365 SKU part number<input name="skuPartNumber" placeholder="Leave blank until an Exchange-capable license is purchased" /></label>
+          <label class="span-2">Entra security or Microsoft 365 group object IDs<textarea name="groupIds" rows="4" placeholder="One group object ID per line; current tenant has no groups"></textarea></label>
           <label class="span-2">Additional SMTP aliases<textarea name="mailAliases" rows="3" placeholder="One email alias per line"></textarea></label>
           <label class="check-line"><input name="stagedAccount" type="checkbox" checked /> Create disabled staging account before the effective date</label>
-          <label class="check-line"><input name="configureExchange" type="checkbox" checked /> Wait for and configure the Exchange Online mailbox</label>
+          <label class="check-line"><input name="configureExchange" type="checkbox" /> Configure Exchange Online after an eligible license is assigned</label>
         </fieldset>
 
         <fieldset>
@@ -136,5 +143,6 @@ Training Academy</textarea></label>
     </main>
   </div>
   <script src="./onboarding-admin.js" type="module"></script>
+  <script src="./tenant-bootstrap.js" type="module"></script>
 </body>
 </html>
