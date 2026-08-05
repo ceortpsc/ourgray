@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Employer onboarding, Microsoft Entra ID, Microsoft 365 email and platform-access administration for The Great Gray Horizon Counseling Center." />
+  <title>Employer Onboarding Admin | Great Gray Horizon</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./onboarding-admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-header">
+      <div class="brand compact-brand">
+        <div class="brand-mark">GGH</div>
+        <div>
+          <strong>The Great Gray Horizon Counseling Center</strong>
+          <span>Employer Onboarding Administration</span>
+        </div>
+      </div>
+      <div class="admin-header-actions">
+        <a class="button secondary" href="./index.html">Return to Candidate Portal</a>
+        <span class="status-chip">CONTROLLED · AUDITED</span>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <section class="admin-banner">
+        <div>
+          <p class="eyebrow">Powered by Ross Tax Pro Software Co.</p>
+          <h1>Employee Identity, Email and Platform Access</h1>
+          <p>Stage, approve, export and track Microsoft Entra ID, Outlook/Microsoft 365 and application-access provisioning packages.</p>
+        </div>
+        <div class="role-control">
+          <label for="onboarding-role">Acting RBAC role</label>
+          <select id="onboarding-role"></select>
+          <small id="onboarding-actor"></small>
+        </div>
+      </section>
+
+      <section id="onboarding-alert" aria-live="polite"></section>
+
+      <section class="grid grid-4" id="onboarding-metrics"></section>
+
+      <div class="section-title">
+        <h2>Approval and compliance gates</h2>
+        <span id="gate-status"></span>
+      </div>
+      <section class="card gate-grid" id="gate-grid"></section>
+
+      <div class="section-title">
+        <h2>Employee provisioning profile</h2>
+        <span class="role-pill" id="role-pill"></span>
+      </div>
+      <form id="provisioning-form" class="card provisioning-form">
+        <fieldset>
+          <legend>Employee and employment record</legend>
+          <label>Display name<input name="displayName" required /></label>
+          <label>Given name<input name="givenName" required /></label>
+          <label>Surname<input name="surname" required /></label>
+          <label>Personal/contact email<input name="personalEmail" type="email" required /></label>
+          <label>Employee ID<input name="employeeId" readonly placeholder="Issue or select an Employee ID" /></label>
+          <label>Candidate subject reference<input name="subjectRef" required /></label>
+          <label>Job title<input name="jobTitle" required /></label>
+          <label>Department<input name="department" required /></label>
+          <label>Manager UPN<input name="managerUpn" type="email" placeholder="manager@domain.com" /></label>
+          <label>Start date<input name="startDate" type="date" required /></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Microsoft Entra ID and Microsoft 365</legend>
+          <label>Tenant ID<input name="tenantId" placeholder="00000000-0000-0000-0000-000000000000" /></label>
+          <label>Verified tenant domain<input name="tenantDomain" required /></label>
+          <label>Mail alias<input name="alias" required /></label>
+          <label>Corporate UPN / email<input name="corporateEmail" readonly /></label>
+          <label>Usage location<input name="usageLocation" maxlength="2" required /></label>
+          <label>Microsoft 365 SKU part number<input name="skuPartNumber" placeholder="Example: SPE_E3" /></label>
+          <label class="span-2">Entra security or Microsoft 365 group object IDs<textarea name="groupIds" rows="4" placeholder="One group object ID per line"></textarea></label>
+          <label class="span-2">Additional SMTP aliases<textarea name="mailAliases" rows="3" placeholder="One email alias per line"></textarea></label>
+          <label class="check-line"><input name="stagedAccount" type="checkbox" checked /> Create disabled staging account before the effective date</label>
+          <label class="check-line"><input name="configureExchange" type="checkbox" checked /> Wait for and configure the Exchange Online mailbox</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Platform access profile</legend>
+          <label>Portal role<select name="portalRole">
+            <option value="CLINICAL_PROGRAM_EXECUTIVE">Clinical Program Executive</option>
+            <option value="CLINICAL_ADMIN">Clinical Administrator</option>
+            <option value="PROGRAM_MANAGER">Program Manager</option>
+            <option value="EMPLOYEE">Standard Employee</option>
+          </select></label>
+          <label>Access tier<select name="accessTier">
+            <option value="STAGED">Staged — no sign-in</option>
+            <option value="STANDARD">Standard workforce access</option>
+            <option value="PRIVILEGED_PENDING">Privileged access pending approval</option>
+          </select></label>
+          <label class="span-2">Application entitlements<textarea name="entitlements" rows="4">Candidate Portal
+Document Signer
+Policy Library
+Training Academy</textarea></label>
+          <label class="check-line"><input name="mfaRequired" type="checkbox" checked /> Require MFA before access activation</label>
+          <label class="check-line"><input name="managedDeviceRequired" type="checkbox" checked /> Require a managed and compliant device</label>
+        </fieldset>
+
+        <div class="form-actions span-full">
+          <button class="button" id="issue-employee-id" type="button">Issue Employee ID</button>
+          <button class="button" id="stage-package" type="submit">Stage provisioning package</button>
+          <button class="button secondary" id="export-package" type="button">Export package JSON</button>
+          <button class="button secondary" id="copy-command" type="button">Copy PowerShell command</button>
+          <button class="button success-button" id="approve-package" type="button">Approve for IT execution</button>
+          <button class="button danger-button" id="mark-disabled" type="button">Mark access disabled</button>
+        </div>
+      </form>
+
+      <div class="section-title">
+        <h2>Generated execution command</h2>
+        <span id="package-status"></span>
+      </div>
+      <section class="card command-card">
+        <pre id="powershell-command"><code>Complete the provisioning profile to generate the authorized PowerShell command.</code></pre>
+      </section>
+
+      <div class="section-title"><h2>Provisioning workflow and evidence log</h2></div>
+      <section class="grid grid-2">
+        <div class="card">
+          <h3>Deterministic workflow</h3>
+          <ol class="workflow-steps" id="workflow-steps"></ol>
+        </div>
+        <div class="card">
+          <h3>Append-only local demonstration log</h3>
+          <div id="onboarding-log" class="onboarding-log"></div>
+        </div>
+      </section>
+
+      <p class="footer-note">Production authorization must be enforced by server-side RBAC, Microsoft Entra Conditional Access, authenticated APIs, immutable audit storage and approved Microsoft 365 administrators. Browser state is demonstration data only.</p>
+    </main>
+  </div>
+  <script src="./onboarding-admin.js" type="module"></script>
+</body>
+</html>
