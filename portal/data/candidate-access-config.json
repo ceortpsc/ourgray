@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "programName": "The Great Gray Horizon Counseling Center",
+  "parentCorporation": "Ross Tax Pro Software Co.",
+  "tenantId": "eb6c9e4e-0943-4ada-b473-fbafda77eb27",
+  "authorityMode": "common",
+  "clientId": "",
+  "redirectPath": "/candidate-access.html",
+  "scopes": [
+    "openid",
+    "profile",
+    "email"
+  ],
+  "oauthEnabled": true,
+  "requireOAuthBeforeSubmission": true,
+  "applicationStorageMode": "browser-demo",
+  "apiBaseUrl": "",
+  "supportEmail": "CEO@ROSSTAXSOFTWARE.COM",
+  "positionOptions": [
+    "Chief Clinical & Program Development Officer",
+    "Clinical Programs Director",
+    "Clinical Program Consultant",
+    "Program Manager",
+    "Administrative or Support Role"
+  ],
+  "requiredDocumentTypes": [
+    "Resume or curriculum vitae",
+    "Professional license information",
+    "Education verification authorization",
+    "Professional references"
+  ],
+  "controls": {
+    "collectSensitiveIdentifiersInBrowser": false,
+    "serverValidationRequiredForAuthorization": true,
+    "backgroundAuthorizationIsSeparate": true,
+    "candidateMayViewOnlyOwnApplication": true
+  }
+}
