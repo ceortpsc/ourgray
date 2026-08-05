@@ -1,0 +1,38 @@
+{
+  "organization": {
+    "name": "The Great Gray Horizon Counseling Center",
+    "parent": "Ross Tax Pro Software Co.",
+    "tagline": "Innovator of All Things Software and Development"
+  },
+  "candidate": {
+    "name": "Jennifer Martin",
+    "email": "Jmartin@thesolastagroup.org",
+    "status": "CONDITIONAL_REVIEW",
+    "proposedTitle": "Chief Clinical & Program Development Officer",
+    "recommendedBaseRange": [90000, 105000],
+    "maximumTargetRange": [95000, 125000]
+  },
+  "activationGates": [
+    "signed_offer",
+    "credential_verification",
+    "ethics_clearance",
+    "conflict_disclosure",
+    "tax_form_release",
+    "benefits_election",
+    "security_acknowledgment"
+  ],
+  "postAcceptanceTriggers": [
+    "create_corporate_email_task",
+    "provision_identity_provider_account",
+    "assign_role_based_access",
+    "issue_managed_device_task",
+    "schedule_orientation",
+    "start_90_day_performance_plan"
+  ],
+  "retention": {
+    "candidateFileYears": 7,
+    "signedAgreementsYears": 10,
+    "auditEvents": "immutable",
+    "legalHoldOverride": true
+  }
+}
