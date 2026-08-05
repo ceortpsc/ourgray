@@ -1,0 +1,51 @@
+name: Great Gray Horizon Portal
+
+on:
+  push:
+    branches: [main, feature/ggh-candidate-portal-v3]
+    paths:
+      - 'portal/**'
+      - '.github/workflows/portal-pages.yml'
+  pull_request:
+    paths:
+      - 'portal/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required assets
+        run: |
+          test -f portal/index.html
+          test -f portal/app.js
+          test -f portal/styles.css
+          test -f portal/embed/ggh-candidate-portal.js
+          python -m json.tool portal/data/seed.json >/dev/null
+      - name: Scan for committed secrets
+        run: |
+          if grep -RIE '(api[_-]?key|client[_-]?secret|password)[[:space:]]*[:=][[:space:]]*["'"'][^"'"']+' portal --exclude='README.md'; then
+            echo 'Potential secret detected'; exit 1
+          fi
+
+  pages-artifact:
+    if: github.event_name == 'push'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: portal
+      - id: deployment
+        uses: actions/deploy-pages@v4
