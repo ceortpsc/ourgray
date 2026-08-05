@@ -1,15 +1,17 @@
 #Requires -Version 7.2
 <#+
 .SYNOPSIS
-Creates a staged or active Microsoft Entra ID workforce account, assigns Microsoft 365 licensing,
-adds approved group-based platform access, and configures the Exchange Online mailbox.
+Creates or updates a staged Microsoft Entra workforce identity, assigns Microsoft 365 licensing,
+and adds approved group memberships using Azure CLI authenticated Microsoft Graph REST calls.
 
 .DESCRIPTION
 Designed for The Great Gray Horizon Counseling Center, powered by Ross Tax Pro Software Co.
-The script accepts a JSON package exported by portal/onboarding-admin.html or direct parameters.
-It does not store credentials, client secrets, access tokens, or temporary passwords in source control.
+The script consumes an approved JSON package exported by portal/onboarding-admin.html or direct
+parameters. It avoids Microsoft.Graph PowerShell module assembly conflicts in Azure Cloud Shell.
 
-Run only from an authorized administrative workstation. Use -WhatIf first.
+No client secret, access token, or temporary password is written into the audit report. A generated
+one-time password is displayed only in the current administrative console when a new account is
+created. Run with -WhatIf before execution.
 #>
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'High')]
 param(
@@ -53,8 +55,8 @@ $script:AuditEvents = [System.Collections.Generic.List[object]]::new()
 
 function Add-GGHAuditEvent {
     param(
-        [Parameter(Mandatory)] [string]$Action,
-        [Parameter(Mandatory)] [string]$Status,
+        [Parameter(Mandatory)][string]$Action,
+        [Parameter(Mandatory)][string]$Status,
         [hashtable]$Details = @{}
     )
     $script:AuditEvents.Add([ordered]@{
@@ -68,16 +70,37 @@ function Add-GGHAuditEvent {
     })
 }
 
-function Assert-GGHModule {
-    param([Parameter(Mandatory)][string]$Name)
-    if (-not (Get-Module -ListAvailable -Name $Name)) {
-        if (-not $InstallMissingModules) {
-            throw "Required PowerShell module '$Name' is not installed. Install it first or rerun with -InstallMissingModules."
-        }
-        Write-Host "Installing $Name from PowerShell Gallery..." -ForegroundColor Yellow
-        Install-Module -Name $Name -Scope CurrentUser -Repository PSGallery -Force -AllowClobber
+function Invoke-GGHGraph {
+    param(
+        [Parameter(Mandatory)][ValidateSet('GET','POST','PATCH','PUT')][string]$Method,
+        [Parameter(Mandatory)][string]$Uri,
+        $Body = $null,
+        [switch]$AllowConflict
+    )
+
+    $arguments = @(
+        'rest',
+        '--method', $Method.ToLowerInvariant(),
+        '--url', $Uri,
+        '--output', 'json',
+        '--only-show-errors'
+    )
+    if ($null -ne $Body) {
+        $json = $Body | ConvertTo-Json -Depth 40 -Compress
+        $arguments += @('--headers', 'Content-Type=application/json', '--body', $json)
     }
-    Import-Module $Name -ErrorAction Stop
+
+    $output = & az @arguments 2>&1
+    $exitCode = $LASTEXITCODE
+    $text = ($output -join "`n")
+    if ($exitCode -ne 0) {
+        if ($AllowConflict -and $text -match 'already exist|added object references already exist|Request_BadRequest') {
+            return [ordered]@{ conflict = $true; message = $text }
+        }
+        throw "Microsoft Graph request failed: $Method $Uri`n$text"
+    }
+    if ([string]::IsNullOrWhiteSpace($text)) { return $null }
+    return ($text | ConvertFrom-Json -Depth 50)
 }
 
 function New-GGHStrongTemporaryPassword {
@@ -86,31 +109,22 @@ function New-GGHStrongTemporaryPassword {
     $digits = '23456789'
     $symbols = '!@#$%*-_+=?'
     $all = ($upper + $lower + $digits + $symbols).ToCharArray()
-    $required = @(
-        $upper[(Get-Random -Maximum $upper.Length)]
-        $lower[(Get-Random -Maximum $lower.Length)]
-        $digits[(Get-Random -Maximum $digits.Length)]
-        $symbols[(Get-Random -Maximum $symbols.Length)]
-    )
-    $remaining = 16 - $required.Count
-    $characters = $required + (1..$remaining | ForEach-Object { $all[(Get-Random -Maximum $all.Length)] })
-    return -join ($characters | Sort-Object { Get-Random })
-}
-
-function Get-GGHResolvedValue {
-    param(
-        [string]$ParameterName,
-        $DirectValue,
-        $PackageValue,
-        $Fallback = $null
-    )
-    if ($PSBoundParameters.ContainsKey($ParameterName) -and $null -ne $DirectValue -and "$DirectValue" -ne '') {
-        return $DirectValue
+    $required = [System.Collections.Generic.List[char]]::new()
+    $required.Add($upper[[System.Security.Cryptography.RandomNumberGenerator]::GetInt32($upper.Length)])
+    $required.Add($lower[[System.Security.Cryptography.RandomNumberGenerator]::GetInt32($lower.Length)])
+    $required.Add($digits[[System.Security.Cryptography.RandomNumberGenerator]::GetInt32($digits.Length)])
+    $required.Add($symbols[[System.Security.Cryptography.RandomNumberGenerator]::GetInt32($symbols.Length)])
+    while ($required.Count -lt 20) {
+        $required.Add($all[[System.Security.Cryptography.RandomNumberGenerator]::GetInt32($all.Length)])
     }
-    if ($null -ne $PackageValue -and "$PackageValue" -ne '') {
-        return $PackageValue
+    $array = $required.ToArray()
+    for ($index = $array.Length - 1; $index -gt 0; $index--) {
+        $swapIndex = [System.Security.Cryptography.RandomNumberGenerator]::GetInt32($index + 1)
+        $temporary = $array[$index]
+        $array[$index] = $array[$swapIndex]
+        $array[$swapIndex] = $temporary
     }
-    return $Fallback
+    return -join $array
 }
 
 function Assert-GGHRequiredValue {
@@ -120,250 +134,233 @@ function Assert-GGHRequiredValue {
     }
 }
 
+if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
+    throw 'Azure CLI is required. Azure Cloud Shell already includes it.'
+}
+
+$account = az account show --output json --only-show-errors | ConvertFrom-Json
+if (-not $account) { throw 'Azure CLI is not authenticated.' }
+if ($account.tenantId -ne $TenantId) {
+    throw "Azure CLI is authenticated to tenant $($account.tenantId), not requested tenant $TenantId."
+}
+Add-GGHAuditEvent -Action 'AZURE_CONTEXT_VALIDATED' -Status 'SUCCESS' -Details @{ tenantId = $account.tenantId; subscriptionId = $account.id }
+
 $package = $null
 if ($InputFile) {
-    $package = Get-Content -Path $InputFile -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 20
+    $package = Get-Content -Path $InputFile -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 30
     Add-GGHAuditEvent -Action 'INPUT_PACKAGE_LOADED' -Status 'SUCCESS' -Details @{ inputFile = (Resolve-Path $InputFile).Path; packageId = $package.packageId }
-}
 
-$TenantDomain = Get-GGHResolvedValue -ParameterName 'TenantDomain' -DirectValue $TenantDomain -PackageValue $package.identity.tenantDomain
-$DisplayName = Get-GGHResolvedValue -ParameterName 'DisplayName' -DirectValue $DisplayName -PackageValue $package.identity.displayName
-$GivenName = Get-GGHResolvedValue -ParameterName 'GivenName' -DirectValue $GivenName -PackageValue $package.identity.givenName
-$Surname = Get-GGHResolvedValue -ParameterName 'Surname' -DirectValue $Surname -PackageValue $package.identity.surname
-$Alias = Get-GGHResolvedValue -ParameterName 'Alias' -DirectValue $Alias -PackageValue $package.identity.alias
-$EmployeeId = Get-GGHResolvedValue -ParameterName 'EmployeeId' -DirectValue $EmployeeId -PackageValue $package.candidate.employeeId
-$PersonalEmail = Get-GGHResolvedValue -ParameterName 'PersonalEmail' -DirectValue $PersonalEmail -PackageValue $package.candidate.personalEmail
-$JobTitle = Get-GGHResolvedValue -ParameterName 'JobTitle' -DirectValue $JobTitle -PackageValue $package.employment.jobTitle
-$Department = Get-GGHResolvedValue -ParameterName 'Department' -DirectValue $Department -PackageValue $package.employment.department
-$ManagerUpn = Get-GGHResolvedValue -ParameterName 'ManagerUpn' -DirectValue $ManagerUpn -PackageValue $package.employment.managerUpn
-$UsageLocation = (Get-GGHResolvedValue -ParameterName 'UsageLocation' -DirectValue $UsageLocation -PackageValue $package.identity.usageLocation -Fallback 'US').ToUpperInvariant()
-$SkuPartNumber = Get-GGHResolvedValue -ParameterName 'SkuPartNumber' -DirectValue $SkuPartNumber -PackageValue $package.microsoft365.skuPartNumber
-
-if (-not $PSBoundParameters.ContainsKey('GroupIds') -and $package.microsoft365.groupIds) {
-    $GroupIds = @($package.microsoft365.groupIds)
-}
-if (-not $PSBoundParameters.ContainsKey('MailAliases') -and $package.microsoft365.mailAliases) {
-    $MailAliases = @($package.microsoft365.mailAliases)
-}
-if (-not $PSBoundParameters.ContainsKey('SkipExchange') -and $package.microsoft365.configureExchange -eq $false) {
-    $SkipExchange = $true
-}
-if (-not $PSBoundParameters.ContainsKey('EnableOnCreate') -and $package.identity.stagedAccount -eq $false) {
-    $EnableOnCreate = $true
-}
-
-foreach ($required in @{
-    TenantDomain = $TenantDomain
-    DisplayName = $DisplayName
-    GivenName = $GivenName
-    Surname = $Surname
-    Alias = $Alias
-    EmployeeId = $EmployeeId
-    JobTitle = $JobTitle
-    Department = $Department
-    UsageLocation = $UsageLocation
-}.GetEnumerator()) {
-    Assert-GGHRequiredValue -Name $required.Key -Value $required.Value
-}
-
-if ($package) {
     if ($package.status -ne 'APPROVED_FOR_IT_EXECUTION') {
         throw "Package status must be APPROVED_FOR_IT_EXECUTION. Current status: $($package.status)"
     }
     if ($package.allGatesComplete -ne $true) {
         throw 'The package does not show all approval and compliance gates as complete.'
     }
+
+    if (-not $TenantDomain) { $TenantDomain = [string]$package.identity.tenantDomain }
+    if (-not $DisplayName) { $DisplayName = [string]$package.identity.displayName }
+    if (-not $GivenName) { $GivenName = [string]$package.identity.givenName }
+    if (-not $Surname) { $Surname = [string]$package.identity.surname }
+    if (-not $Alias) { $Alias = [string]$package.identity.alias }
+    if (-not $EmployeeId) { $EmployeeId = [string]$package.candidate.employeeId }
+    if (-not $PersonalEmail) { $PersonalEmail = [string]$package.candidate.personalEmail }
+    if (-not $JobTitle) { $JobTitle = [string]$package.employment.jobTitle }
+    if (-not $Department) { $Department = [string]$package.employment.department }
+    if (-not $ManagerUpn) { $ManagerUpn = [string]$package.employment.managerUpn }
+    if (-not $UsageLocation -or $UsageLocation -eq 'US') { $UsageLocation = [string]($package.identity.usageLocation ?? 'US') }
+    if (-not $SkuPartNumber) { $SkuPartNumber = [string]$package.microsoft365.skuPartNumber }
+    if ($GroupIds.Count -eq 0 -and $package.microsoft365.groupIds) { $GroupIds = @($package.microsoft365.groupIds) }
+    if ($MailAliases.Count -eq 0 -and $package.microsoft365.mailAliases) { $MailAliases = @($package.microsoft365.mailAliases) }
+    if (-not $PSBoundParameters.ContainsKey('EnableOnCreate') -and $package.identity.stagedAccount -eq $false) { $EnableOnCreate = $true }
+    if (-not $PSBoundParameters.ContainsKey('SkipExchange') -and $package.microsoft365.configureExchange -eq $false) { $SkipExchange = $true }
+}
+
+foreach ($required in @{
+    TenantDomain  = $TenantDomain
+    DisplayName   = $DisplayName
+    GivenName     = $GivenName
+    Surname       = $Surname
+    Alias         = $Alias
+    EmployeeId    = $EmployeeId
+    JobTitle      = $JobTitle
+    Department    = $Department
+    UsageLocation = $UsageLocation
+}.GetEnumerator()) {
+    Assert-GGHRequiredValue -Name $required.Key -Value $required.Value
 }
 
 $Alias = $Alias.Trim().ToLowerInvariant()
 $TenantDomain = $TenantDomain.Trim().ToLowerInvariant()
-if ($Alias -notmatch '^[a-z0-9][a-z0-9._-]{0,63}$') {
-    throw 'Alias contains unsupported characters.'
-}
-if ($TenantDomain -notmatch '^[a-z0-9.-]+\.[a-z]{2,}$') {
-    throw 'TenantDomain is not a valid DNS domain name.'
-}
+$UsageLocation = $UsageLocation.Trim().ToUpperInvariant()
+if ($Alias -notmatch '^[a-z0-9][a-z0-9._-]{0,63}$') { throw 'Alias contains unsupported characters.' }
+if ($TenantDomain -notmatch '^[a-z0-9.-]+\.[a-z]{2,}$') { throw 'TenantDomain is not a valid DNS domain name.' }
+if ($UsageLocation -notmatch '^[A-Z]{2}$') { throw 'UsageLocation must be a two-letter country code.' }
 $UserPrincipalName = "$Alias@$TenantDomain"
 
-Assert-GGHModule -Name 'Microsoft.Graph.Authentication'
-Assert-GGHModule -Name 'Microsoft.Graph.Users'
-Assert-GGHModule -Name 'Microsoft.Graph.Groups'
-Assert-GGHModule -Name 'Microsoft.Graph.Users.Actions'
-Assert-GGHModule -Name 'Microsoft.Graph.Identity.DirectoryManagement'
-if (-not $SkipExchange) {
-    Assert-GGHModule -Name 'ExchangeOnlineManagement'
-}
-
-$graphScopes = @(
-    'User.ReadWrite.All',
-    'User.EnableDisableAccount.All',
-    'GroupMember.ReadWrite.All',
-    'Directory.ReadWrite.All',
-    'Organization.Read.All',
-    'LicenseAssignment.ReadWrite.All',
-    'Domain.Read.All'
-)
-
-Connect-MgGraph -TenantId $TenantId -Scopes $graphScopes -NoWelcome
-$context = Get-MgContext
-if (-not $context -or $context.TenantId -ne $TenantId) {
-    throw 'Microsoft Graph connection did not resolve to the requested tenant.'
-}
-Add-GGHAuditEvent -Action 'GRAPH_CONNECTED' -Status 'SUCCESS' -Details @{ tenantId = $context.TenantId; account = $context.Account; authType = $context.AuthType }
-
-$verifiedDomain = Get-MgDomain -All | Where-Object { $_.Id -eq $TenantDomain -and $_.IsVerified }
-if (-not $verifiedDomain) {
-    throw "Domain '$TenantDomain' is not verified in the connected Microsoft Entra tenant."
-}
+$domains = Invoke-GGHGraph -Method GET -Uri 'https://graph.microsoft.com/v1.0/domains?$select=id,isVerified,isDefault'
+$verifiedDomain = @($domains.value | Where-Object { $_.id -eq $TenantDomain -and $_.isVerified -eq $true }) | Select-Object -First 1
+if (-not $verifiedDomain) { throw "Domain '$TenantDomain' is not verified in the connected Microsoft Entra tenant." }
 Add-GGHAuditEvent -Action 'TENANT_DOMAIN_VERIFIED' -Status 'SUCCESS' -Details @{ tenantDomain = $TenantDomain }
 
-$filterUpn = $UserPrincipalName.Replace("'", "''")
-$existingUser = Get-MgUser -Filter "userPrincipalName eq '$filterUpn'" -Property Id,DisplayName,UserPrincipalName,AccountEnabled,EmployeeId -ConsistencyLevel eventual | Select-Object -First 1
-if ($existingUser) {
-    if ($existingUser.EmployeeId -and $existingUser.EmployeeId -ne $EmployeeId) {
+$escapedUpn = $UserPrincipalName.Replace("'", "''")
+$encodedFilter = [uri]::EscapeDataString("userPrincipalName eq '$escapedUpn'")
+$userResponse = Invoke-GGHGraph -Method GET -Uri "https://graph.microsoft.com/v1.0/users?`$filter=$encodedFilter&`$select=id,displayName,userPrincipalName,accountEnabled,employeeId,assignedLicenses"
+$user = @($userResponse.value) | Select-Object -First 1
+$temporaryPassword = $null
+$userStatus = 'EXISTING'
+
+if ($user) {
+    if ($user.employeeId -and $user.employeeId -ne $EmployeeId) {
         throw "UPN '$UserPrincipalName' already belongs to a different Employee ID."
     }
-    $user = $existingUser
-    Add-GGHAuditEvent -Action 'ENTRA_USER_FOUND' -Status 'EXISTING' -Details @{ objectId = $user.Id; upn = $UserPrincipalName }
+    $updateBody = [ordered]@{
+        displayName   = $DisplayName
+        givenName     = $GivenName
+        surname       = $Surname
+        usageLocation = $UsageLocation
+        employeeId    = $EmployeeId
+        jobTitle      = $JobTitle
+        department    = $Department
+    }
+    if ($PersonalEmail) { $updateBody.otherMails = @($PersonalEmail) }
+    if ($PSCmdlet.ShouldProcess($UserPrincipalName, 'Update Microsoft Entra workforce identity')) {
+        Invoke-GGHGraph -Method PATCH -Uri "https://graph.microsoft.com/v1.0/users/$($user.id)" -Body $updateBody | Out-Null
+        $userStatus = 'UPDATED'
+        Add-GGHAuditEvent -Action 'ENTRA_USER_UPDATED' -Status 'SUCCESS' -Details @{ objectId = $user.id; upn = $UserPrincipalName; employeeId = $EmployeeId }
+    }
 } else {
     $temporaryPassword = New-GGHStrongTemporaryPassword
-    $passwordProfile = @{
-        password = $temporaryPassword
-        forceChangePasswordNextSignIn = $true
-    }
-    $userBody = @{
-        accountEnabled = [bool]$EnableOnCreate
-        displayName = $DisplayName
-        givenName = $GivenName
-        surname = $Surname
-        mailNickname = $Alias
+    $userBody = [ordered]@{
+        accountEnabled    = [bool]$EnableOnCreate
+        displayName       = $DisplayName
+        givenName         = $GivenName
+        surname           = $Surname
+        mailNickname      = $Alias
         userPrincipalName = $UserPrincipalName
-        usageLocation = $UsageLocation
-        employeeId = $EmployeeId
-        jobTitle = $JobTitle
-        department = $Department
-        otherMails = @($PersonalEmail | Where-Object { $_ })
-        passwordProfile = $passwordProfile
+        usageLocation     = $UsageLocation
+        employeeId        = $EmployeeId
+        jobTitle          = $JobTitle
+        department        = $Department
+        passwordProfile   = [ordered]@{
+            password = $temporaryPassword
+            forceChangePasswordNextSignIn = $true
+        }
     }
+    if ($PersonalEmail) { $userBody.otherMails = @($PersonalEmail) }
 
     if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Create Microsoft Entra user (enabled=$([bool]$EnableOnCreate))")) {
-        $user = New-MgUser -BodyParameter $userBody
-        Add-GGHAuditEvent -Action 'ENTRA_USER_CREATED' -Status 'SUCCESS' -Details @{ objectId = $user.Id; upn = $UserPrincipalName; accountEnabled = [bool]$EnableOnCreate; employeeId = $EmployeeId }
-        Write-Warning 'A one-time temporary password was generated. Deliver it only through an approved secure channel; it is intentionally excluded from the audit file.'
-        Write-Host "ONE-TIME TEMPORARY PASSWORD FOR $UserPrincipalName: $temporaryPassword" -ForegroundColor Yellow
+        $user = Invoke-GGHGraph -Method POST -Uri 'https://graph.microsoft.com/v1.0/users' -Body $userBody
+        $userStatus = 'CREATED'
+        Add-GGHAuditEvent -Action 'ENTRA_USER_CREATED' -Status 'SUCCESS' -Details @{ objectId = $user.id; upn = $UserPrincipalName; accountEnabled = [bool]$EnableOnCreate; employeeId = $EmployeeId }
+        Write-Warning 'A one-time temporary password was generated. Deliver it only through an approved secure channel. It is excluded from the audit file.'
+        Write-Host "ONE-TIME TEMPORARY PASSWORD FOR ${UserPrincipalName}: $temporaryPassword" -ForegroundColor Yellow
     }
 }
 
-if (-not $user) {
+if (-not $user -or -not $user.id) {
     throw 'No Entra user object is available. The operation may have been skipped by -WhatIf.'
 }
 
 if ($ManagerUpn) {
-    $manager = Get-MgUser -UserId $ManagerUpn -Property Id,UserPrincipalName
-    $managerReference = @{ '@odata.id' = "https://graph.microsoft.com/v1.0/users/$($manager.Id)" }
-    if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Assign manager $ManagerUpn")) {
-        Set-MgUserManagerByRef -UserId $user.Id -BodyParameter $managerReference
-        Add-GGHAuditEvent -Action 'MANAGER_ASSIGNED' -Status 'SUCCESS' -Details @{ managerUpn = $ManagerUpn; managerId = $manager.Id }
+    $managerEncoded = [uri]::EscapeDataString($ManagerUpn)
+    $manager = Invoke-GGHGraph -Method GET -Uri "https://graph.microsoft.com/v1.0/users/$managerEncoded?`$select=id,userPrincipalName"
+    if ($manager -and $PSCmdlet.ShouldProcess($UserPrincipalName, "Assign manager $ManagerUpn")) {
+        Invoke-GGHGraph -Method PUT -Uri "https://graph.microsoft.com/v1.0/users/$($user.id)/manager/`$ref" -Body ([ordered]@{
+            '@odata.id' = "https://graph.microsoft.com/v1.0/users/$($manager.id)"
+        }) | Out-Null
+        Add-GGHAuditEvent -Action 'MANAGER_ASSIGNED' -Status 'SUCCESS' -Details @{ managerUpn = $ManagerUpn; managerId = $manager.id }
     }
 }
 
 $licenseAssigned = $false
+$assignedSku = $null
 if ($SkuPartNumber) {
-    $sku = Get-MgSubscribedSku -All | Where-Object { $_.SkuPartNumber -eq $SkuPartNumber } | Select-Object -First 1
-    if (-not $sku) {
-        throw "Microsoft 365 SKU '$SkuPartNumber' is not available in the connected tenant."
-    }
+    $skuResponse = Invoke-GGHGraph -Method GET -Uri 'https://graph.microsoft.com/v1.0/subscribedSkus?$select=skuId,skuPartNumber,capabilityStatus,consumedUnits,prepaidUnits,servicePlans'
+    $sku = @($skuResponse.value | Where-Object { $_.skuPartNumber -eq $SkuPartNumber }) | Select-Object -First 1
+    if (-not $sku) { throw "Microsoft 365 SKU '$SkuPartNumber' is not available in the connected tenant." }
+    $enabledUnits = [int]($sku.prepaidUnits.enabled ?? 0)
+    $consumedUnits = [int]($sku.consumedUnits ?? 0)
+    if (($enabledUnits - $consumedUnits) -le 0) { throw "Microsoft 365 SKU '$SkuPartNumber' has no available units." }
+
     if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Assign Microsoft 365 license $SkuPartNumber")) {
-        Set-MgUserLicense -UserId $user.Id -AddLicenses @(@{ SkuId = $sku.SkuId }) -RemoveLicenses @() | Out-Null
+        Invoke-GGHGraph -Method POST -Uri "https://graph.microsoft.com/v1.0/users/$($user.id)/assignLicense" -Body ([ordered]@{
+            addLicenses = @([ordered]@{ skuId = $sku.skuId })
+            removeLicenses = @()
+        }) | Out-Null
         $licenseAssigned = $true
-        Add-GGHAuditEvent -Action 'M365_LICENSE_ASSIGNED' -Status 'SUCCESS' -Details @{ skuPartNumber = $SkuPartNumber; skuId = $sku.SkuId }
+        $assignedSku = [ordered]@{ skuPartNumber = $sku.skuPartNumber; skuId = $sku.skuId }
+        Add-GGHAuditEvent -Action 'M365_LICENSE_ASSIGNED' -Status 'SUCCESS' -Details @{ skuPartNumber = $sku.skuPartNumber; skuId = $sku.skuId }
     }
 }
 
-$groupResults = @()
+$groupResults = [System.Collections.Generic.List[object]]::new()
 foreach ($groupId in @($GroupIds | Where-Object { $_ })) {
-    if ($groupId -notmatch '^[0-9a-fA-F-]{36}$') {
-        throw "Group ID '$groupId' is not a GUID."
-    }
-    $reference = @{ '@odata.id' = "https://graph.microsoft.com/v1.0/directoryObjects/$($user.Id)" }
-    try {
-        if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Add user to group $groupId")) {
-            New-MgGroupMemberByRef -GroupId $groupId -BodyParameter $reference
-            $groupResults += [ordered]@{ groupId = $groupId; status = 'ADDED' }
-            Add-GGHAuditEvent -Action 'GROUP_MEMBERSHIP_ASSIGNED' -Status 'SUCCESS' -Details @{ groupId = $groupId; userId = $user.Id }
-        }
-    } catch {
-        if ($_.Exception.Message -match 'already exist|added object references already exist|One or more added object references already exist') {
-            $groupResults += [ordered]@{ groupId = $groupId; status = 'ALREADY_MEMBER' }
+    if ($groupId -notmatch '^[0-9a-fA-F-]{36}$') { throw "Group ID '$groupId' is not a GUID." }
+    if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Add user to group $groupId")) {
+        $groupResult = Invoke-GGHGraph -Method POST -Uri "https://graph.microsoft.com/v1.0/groups/$groupId/members/`$ref" -Body ([ordered]@{
+            '@odata.id' = "https://graph.microsoft.com/v1.0/directoryObjects/$($user.id)"
+        }) -AllowConflict
+        if ($groupResult -and $groupResult.conflict) {
+            $groupResults.Add([ordered]@{ groupId = $groupId; status = 'ALREADY_MEMBER' })
             Add-GGHAuditEvent -Action 'GROUP_MEMBERSHIP_ASSIGNED' -Status 'NO_CHANGE' -Details @{ groupId = $groupId; reason = 'Already a member' }
         } else {
-            throw
+            $groupResults.Add([ordered]@{ groupId = $groupId; status = 'ADDED' })
+            Add-GGHAuditEvent -Action 'GROUP_MEMBERSHIP_ASSIGNED' -Status 'SUCCESS' -Details @{ groupId = $groupId; userId = $user.id }
         }
     }
 }
 
 $mailboxStatus = 'SKIPPED'
-if (-not $SkipExchange -and ($licenseAssigned -or $existingUser)) {
-    Connect-ExchangeOnline -ShowBanner:$false
-    Add-GGHAuditEvent -Action 'EXCHANGE_CONNECTED' -Status 'SUCCESS' -Details @{ tenantDomain = $TenantDomain }
-
-    $deadline = (Get-Date).AddMinutes($MailboxWaitMinutes)
-    $mailbox = $null
-    do {
-        try {
-            $mailbox = Get-EXOMailbox -Identity $UserPrincipalName -Properties DisplayName,EmailAddresses,Alias -ErrorAction Stop
-        } catch {
-            if ((Get-Date) -lt $deadline) {
-                Start-Sleep -Seconds 30
-            }
-        }
-    } while (-not $mailbox -and (Get-Date) -lt $deadline)
-
-    if (-not $mailbox) {
-        $mailboxStatus = 'PENDING_PROVISIONING'
-        Add-GGHAuditEvent -Action 'EXCHANGE_MAILBOX_WAIT' -Status 'PENDING' -Details @{ upn = $UserPrincipalName; waitedMinutes = $MailboxWaitMinutes }
-        Write-Warning "Mailbox was not available within $MailboxWaitMinutes minutes. Rerun mailbox configuration after Microsoft 365 provisioning completes."
+if (-not $SkipExchange) {
+    if (-not $SkuPartNumber) {
+        $mailboxStatus = 'LICENSE_REQUIRED'
+        Add-GGHAuditEvent -Action 'EXCHANGE_MAILBOX_STATUS' -Status 'BLOCKED' -Details @{ reason = 'No Exchange-capable SKU was supplied.' }
+    } elseif ($licenseAssigned) {
+        $mailboxStatus = 'LICENSE_ASSIGNED_PENDING_MICROSOFT_PROVISIONING'
+        Add-GGHAuditEvent -Action 'EXCHANGE_MAILBOX_STATUS' -Status 'PENDING' -Details @{ skuPartNumber = $SkuPartNumber; waitGuidanceMinutes = $MailboxWaitMinutes }
     } else {
-        if ($PSCmdlet.ShouldProcess($UserPrincipalName, 'Apply Exchange Online mailbox metadata and aliases')) {
-            Set-Mailbox -Identity $UserPrincipalName -CustomAttribute1 'GGH' -CustomAttribute2 $EmployeeId
-            $normalizedAliases = @($MailAliases | Where-Object { $_ } | ForEach-Object {
-                $value = $_.Trim().ToLowerInvariant()
-                if ($value -notmatch '^[^@\s]+@[^@\s]+\.[^@\s]+$') { throw "Invalid mail alias '$value'." }
-                "smtp:$value"
-            })
-            if ($normalizedAliases.Count -gt 0) {
-                Set-Mailbox -Identity $UserPrincipalName -EmailAddresses @{ Add = $normalizedAliases }
-            }
-            if ($DisableLegacyMailProtocols) {
-                Set-CASMailbox -Identity $UserPrincipalName -PopEnabled:$false -ImapEnabled:$false
-            }
-            $mailboxStatus = 'CONFIGURED'
-            Add-GGHAuditEvent -Action 'EXCHANGE_MAILBOX_CONFIGURED' -Status 'SUCCESS' -Details @{ upn = $UserPrincipalName; aliasesAdded = $normalizedAliases; legacyProtocolsDisabled = [bool]$DisableLegacyMailProtocols }
-        }
+        $mailboxStatus = 'EXISTING_LICENSE_REVIEW_REQUIRED'
     }
 }
 
-$result = [ordered]@{
-    schemaVersion       = 1
-    completedAt         = (Get-Date).ToUniversalTime().ToString('o')
-    tenantId            = $TenantId
-    tenantDomain        = $TenantDomain
-    userObjectId        = $user.Id
-    userPrincipalName   = $UserPrincipalName
-    employeeId          = $EmployeeId
-    accountEnabled      = [bool]$EnableOnCreate
-    stagedAccount       = -not [bool]$EnableOnCreate
-    skuPartNumber       = $SkuPartNumber
-    licenseAssigned     = $licenseAssigned
-    groupAssignments    = $groupResults
-    mailboxStatus       = $mailboxStatus
-    auditEvents         = $script:AuditEvents
-    temporaryPasswordInAudit = $false
+if ($MailAliases.Count -gt 0) {
+    Add-GGHAuditEvent -Action 'MAIL_ALIASES_DEFERRED' -Status 'PENDING' -Details @{ aliases = @($MailAliases); reason = 'Exchange Online mailbox administration must occur after mailbox provisioning through an approved Exchange administrative session.' }
+}
+if ($DisableLegacyMailProtocols) {
+    Add-GGHAuditEvent -Action 'LEGACY_MAIL_PROTOCOL_CONTROL_DEFERRED' -Status 'PENDING' -Details @{ reason = 'Apply through Exchange Online after mailbox provisioning.' }
 }
 
-$result | ConvertTo-Json -Depth 20 | Set-Content -Path $AuditOutputPath -Encoding UTF8
-Write-Host "Provisioning audit written to: $AuditOutputPath" -ForegroundColor Green
-$result | ConvertTo-Json -Depth 20
+$verifiedUser = Invoke-GGHGraph -Method GET -Uri "https://graph.microsoft.com/v1.0/users/$($user.id)?`$select=id,displayName,userPrincipalName,accountEnabled,employeeId,jobTitle,department,assignedLicenses"
 
-Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
-Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+$result = [ordered]@{
+    schemaVersion            = 2
+    completedAt              = (Get-Date).ToUniversalTime().ToString('o')
+    collectionMethod         = 'Azure CLI az rest to Microsoft Graph'
+    tenantId                 = $TenantId
+    tenantDomain             = $TenantDomain
+    userObjectId             = $verifiedUser.id
+    userPrincipalName        = $verifiedUser.userPrincipalName
+    employeeId               = $verifiedUser.employeeId
+    userStatus               = $userStatus
+    accountEnabled           = $verifiedUser.accountEnabled
+    stagedAccount            = -not [bool]$verifiedUser.accountEnabled
+    skuPartNumber            = $SkuPartNumber
+    assignedSku              = $assignedSku
+    licenseAssigned          = $licenseAssigned
+    groupAssignments         = @($groupResults)
+    mailboxStatus            = $mailboxStatus
+    deferredMailAliases      = @($MailAliases)
+    auditEvents              = $script:AuditEvents
+    temporaryPasswordInAudit = $false
+    controls                 = [ordered]@{
+        graphPowerShellModulesUsed = $false
+        clientSecretUsed = $false
+        accessTokenWritten = $false
+        temporaryPasswordWritten = $false
+        exchangePostProvisioningRequired = (-not $SkipExchange)
+    }
+}
+
+$result | ConvertTo-Json -Depth 30 | Set-Content -Path $AuditOutputPath -Encoding UTF8
+Write-Host "Provisioning audit written to: $AuditOutputPath" -ForegroundColor Green
+$result | ConvertTo-Json -Depth 30
