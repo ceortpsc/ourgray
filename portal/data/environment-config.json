@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "application": "Great Gray Horizon Learning & Operations Platform",
+  "environment": "SIMULATION",
+  "release": "2.0.0-rc.1",
+  "runtime": {
+    "node": ">=20",
+    "packageManager": "npm",
+    "portalPort": 8080,
+    "portalDirectory": "portal",
+    "entryPoint": "learning-portal.html"
+  },
+  "profiles": {
+    "simulation": {
+      "label": "Browser Simulation",
+      "description": "Static LMS interface with local browser state and no live provider calls.",
+      "liveProviders": false
+    },
+    "local": {
+      "label": "Local Development",
+      "description": "Repository dependencies installed locally with a development web server on port 8080.",
+      "liveProviders": false
+    },
+    "preview": {
+      "label": "Cloud Preview",
+      "description": "Static preview deployment after validation. Provider credentials remain external to browser code.",
+      "liveProviders": false
+    }
+  },
+  "commands": {
+    "install": "npm install",
+    "test": "npm run test:portal",
+    "serve": "python3 -m http.server 8080 --directory ./portal",
+    "powershellBootstrap": "pwsh ./scripts/dev/Initialize-GGHEnvironment.ps1",
+    "cloudflarePreview": "pwsh ./scripts/cloudflare/Deploy-GGHCloudflarePages.ps1 -ProjectName 'great-gray-horizon' -Directory 'portal' -PreviewOnly -Confirm:$false"
+  },
+  "routes": [
+    "/learning-portal.html",
+    "/terminal.html",
+    "/candidate-access.html",
+    "/onboarding-admin.html",
+    "/operations-engine.html",
+    "/index.html"
+  ],
+  "security": {
+    "browserTerminalMode": "ALLOWLISTED_VIRTUAL_COMMANDS",
+    "arbitraryShellExecution": false,
+    "secretsInBrowser": false,
+    "secretsInRepository": false,
+    "productionAuthorization": "SERVER_SIDE_REQUIRED"
+  }
+}
