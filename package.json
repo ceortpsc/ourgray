@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "test:portal": "node --test portal/tests/*.test.mjs",
-    "validate:portal-seed": "python -m json.tool portal/data/seed.json > /dev/null"
+    "validate:portal-seed": "python -m json.tool portal/data/seed.json > /dev/null",
+    "env:init": "pwsh ./scripts/dev/Initialize-GGHEnvironment.ps1",
+    "portal:serve": "python3 -m http.server 8080 --directory ./portal"
   },
   "dependencies": {
     "lucide-react": "^0.263.1",
