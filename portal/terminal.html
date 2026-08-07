@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Great Gray Horizon integrated development terminal and environment console." />
+  <meta name="theme-color" content="#0b1f3a" />
+  <title>Great Gray Horizon | Terminal & Environment</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./terminal.css" />
+</head>
+<body>
+  <div class="terminal-app">
+    <header class="terminal-header">
+      <a class="terminal-brand" href="./learning-portal.html">
+        <span class="brand-mark">GGH</span>
+        <span><strong>Great Gray Horizon</strong><small>Terminal & Environment Console</small></span>
+      </a>
+      <div class="terminal-header-actions">
+        <span class="terminal-status"><span class="status-dot"></span> SAFE VIRTUAL SHELL</span>
+        <a class="button secondary" href="./learning-portal.html">Return to LMS</a>
+      </div>
+    </header>
+
+    <main class="terminal-layout">
+      <aside class="environment-panel">
+        <section class="panel-card">
+          <p class="eyebrow">Environment profile</p>
+          <h1>Runtime Console</h1>
+          <p>Configure the browser simulation and generate the exact local bootstrap commands for Azure Cloud Shell or a development workstation.</p>
+          <label for="environment-profile">Active profile</label>
+          <select id="environment-profile"></select>
+          <div id="environment-description" class="environment-description"></div>
+        </section>
+
+        <section class="panel-card">
+          <div class="section-heading"><h2>Environment</h2><span id="environment-badge" class="badge warn">LOADING</span></div>
+          <dl id="environment-details" class="environment-details"></dl>
+        </section>
+
+        <section class="panel-card">
+          <div class="section-heading"><h2>Quick actions</h2></div>
+          <div class="quick-actions">
+            <button data-command="env">Inspect environment</button>
+            <button data-command="status">Platform status</button>
+            <button data-command="routes">List routes</button>
+            <button data-command="install">Install plan</button>
+            <button data-command="test">Validation plan</button>
+            <button data-command="start">Start plan</button>
+            <button data-command="cloudflare">Preview deploy plan</button>
+            <button data-command="clear">Clear terminal</button>
+          </div>
+        </section>
+
+        <section class="panel-card boundary-card">
+          <strong>Execution boundary</strong>
+          <p>The embedded terminal intentionally does not execute arbitrary operating-system commands. Real install, test, serve, identity, payment, and deployment operations run only from an authenticated server or terminal.</p>
+        </section>
+      </aside>
+
+      <section class="terminal-workspace">
+        <div class="terminal-window" role="region" aria-label="Virtual terminal">
+          <div class="terminal-titlebar">
+            <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <strong>ggh-terminal</strong>
+            <span id="terminal-context">simulation@ggh:/portal</span>
+          </div>
+          <div id="terminal-output" class="terminal-output" tabindex="0" aria-live="polite"></div>
+          <form id="terminal-form" class="terminal-input-row" autocomplete="off">
+            <span id="terminal-prompt">ggh@simulation:~$</span>
+            <input id="terminal-input" type="text" aria-label="Terminal command" spellcheck="false" placeholder="Type help" />
+          </form>
+        </div>
+
+        <section class="command-reference">
+          <div class="section-heading"><h2>Supported virtual commands</h2><span class="badge ok">ALLOWLISTED</span></div>
+          <div id="command-reference-grid" class="command-grid"></div>
+        </section>
+
+        <section class="bootstrap-card">
+          <div>
+            <p class="eyebrow">Real environment bootstrap</p>
+            <h2>Install and configure from a terminal</h2>
+            <p>The repository contains a PowerShell bootstrap that validates Node/npm, installs project dependencies, verifies the LMS assets, runs tests, and prints the local launch command.</p>
+          </div>
+          <div class="bootstrap-actions">
+            <button class="button" id="copy-bootstrap">Copy bootstrap command</button>
+            <button class="button secondary" id="download-plan">Download environment plan</button>
+          </div>
+          <pre id="bootstrap-command"></pre>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-region" aria-live="polite"></div>
+  <script src="./terminal.js" type="module"></script>
+</body>
+</html>
