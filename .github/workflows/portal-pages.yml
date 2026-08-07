@@ -48,6 +48,9 @@ jobs:
           test -f portal/learning-portal.html
           test -f portal/learning-portal.css
           test -f portal/learning-portal.js
+          test -f portal/terminal.html
+          test -f portal/terminal.css
+          test -f portal/terminal.js
           test -f portal/onboarding-admin.html
           test -f portal/onboarding-admin.css
           test -f portal/onboarding-admin.js
@@ -60,6 +63,8 @@ jobs:
           test -f portal/data/candidate-access-config.json
           test -f portal/data/engine-config.json
           test -f portal/data/program-spec.json
+          test -f portal/data/lms-simulation.json
+          test -f portal/data/environment-config.json
           test -f portal/lib/id-engine.js
           test -f portal/lib/rbac.js
           test -f portal/lib/application-engine.js
@@ -78,6 +83,7 @@ jobs:
           test -f scripts/m365/Provision-GGHEmployee.ps1
           test -f scripts/m365/Enable-GGHEmployeeAccess.ps1
           test -f scripts/cloudflare/Deploy-GGHCloudflarePages.ps1
+          test -f scripts/dev/Initialize-GGHEnvironment.ps1
           test -f openapi/ggh-onboarding.yaml
           test -f docs/GGH_SYSTEM_ARCHITECTURE.md
           python -m json.tool portal/data/seed.json >/dev/null
@@ -85,9 +91,12 @@ jobs:
           python -m json.tool portal/data/candidate-access-config.json >/dev/null
           python -m json.tool portal/data/engine-config.json >/dev/null
           python -m json.tool portal/data/program-spec.json >/dev/null
+          python -m json.tool portal/data/lms-simulation.json >/dev/null
+          python -m json.tool portal/data/environment-config.json >/dev/null
           node --check portal/app.js
           node --check portal/candidate-access.js
           node --check portal/learning-portal.js
+          node --check portal/terminal.js
           node --check portal/onboarding-admin.js
           node --check portal/operations-engine.js
           node --check portal/tenant-bootstrap.js
