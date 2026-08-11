@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "environment": "SIMULATION",
+  "institution": {
+    "name": "The Great Gray Horizon Counseling Center",
+    "parent": "Ross Tax Pro Software Co.",
+    "slogan": "Illuminating Pathways Beyond the Gray Horizon.",
+    "supportEmail": "support@greatgrayhorizon.example.invalid"
+  },
+  "learner": {
+    "name": "Demo Learner",
+    "studentId": "GGH-STU-DEMO-0001",
+    "program": "Distance Learning Counseling Foundations",
+    "term": "Fall 2026",
+    "status": "ACTIVE",
+    "progress": 38,
+    "gpa": 3.72,
+    "creditsAttempted": 12,
+    "creditsCompleted": 4
+  },
+  "announcements": [
+    {"id":"ANN-1001","title":"Orientation evidence due","body":"Complete the privacy, academic integrity, and technology orientation checkpoints before the first graded simulation.","audience":"Students","priority":"HIGH","postedAt":"2026-08-05T14:00:00Z"},
+    {"id":"ANN-1002","title":"Simulation review window","body":"Faculty review of educational simulation artifacts is scheduled for this week. AI-generated formative feedback remains non-final until instructor review.","audience":"Students & Faculty","priority":"NORMAL","postedAt":"2026-08-04T16:30:00Z"},
+    {"id":"ANN-1003","title":"Governance evidence cycle","body":"Auditor-facing evidence exports for the current cycle are available in the Evidence Center simulation.","audience":"Auditors & Executive","priority":"NORMAL","postedAt":"2026-08-03T18:00:00Z"}
+  ],
+  "courses": [
+    {"id":"COUNSEL-ADV-101","title":"Advanced Counseling Reasoning","instructor":"Clinical Faculty Review Team","progress":45,"status":"IN_PROGRESS","next":"Structured assessment simulation","meeting":"Asynchronous"},
+    {"id":"ETHICS-TELE-201","title":"Ethics and Telehealth Protocols","instructor":"Clinical Faculty Review Team","progress":30,"status":"IN_PROGRESS","next":"Consent and boundary analysis","meeting":"Asynchronous"},
+    {"id":"GOV-AUDIT-301","title":"Program Governance and Audit Readiness","instructor":"Program Administration","progress":20,"status":"IN_PROGRESS","next":"Evidence package construction","meeting":"Asynchronous"}
+  ],
+  "assignments": [
+    {"id":"ASG-201","course":"COUNSEL-ADV-101","title":"Reasoning Map 1","due":"2026-08-12","points":100,"status":"SUBMITTED","grade":92,"review":"FACULTY_REVIEWED"},
+    {"id":"ASG-202","course":"ETHICS-TELE-201","title":"Telehealth Consent Analysis","due":"2026-08-15","points":100,"status":"IN_PROGRESS","grade":null,"review":"PENDING"},
+    {"id":"ASG-203","course":"GOV-AUDIT-301","title":"Audit Evidence Matrix","due":"2026-08-20","points":100,"status":"NOT_STARTED","grade":null,"review":"PENDING"},
+    {"id":"ASG-204","course":"COUNSEL-ADV-101","title":"Simulation Reflection","due":"2026-08-22","points":50,"status":"NOT_STARTED","grade":null,"review":"PENDING"}
+  ],
+  "gradebook": [
+    {"course":"Advanced Counseling Reasoning","earned":184,"possible":200,"percent":92,"letter":"A-"},
+    {"course":"Ethics and Telehealth Protocols","earned":86,"possible":100,"percent":86,"letter":"B"},
+    {"course":"Program Governance and Audit Readiness","earned":95,"possible":100,"percent":95,"letter":"A"}
+  ],
+  "people": [
+    {"name":"Condre Ross","role":"Executive / Program Director","presence":"Available","credentialStatus":"Administrator-provided"},
+    {"name":"Dr. Jenifer Martin","role":"Clinical Persona Steward","presence":"Review queue","credentialStatus":"Administrator-provided; verification required before public credential claims"},
+    {"name":"Teaching Assistant Persona","role":"AI-assisted administrative support","presence":"Online","credentialStatus":"Software persona"},
+    {"name":"Demo Learner","role":"Student","presence":"Online","credentialStatus":"Simulation profile"}
+  ],
+  "messages": [
+    {"id":"MSG-1","from":"Teaching Assistant Persona","subject":"Upcoming assignment","preview":"Your Telehealth Consent Analysis is due soon.","unread":true},
+    {"id":"MSG-2","from":"Program Administration","subject":"Orientation evidence","preview":"Your privacy orientation checkpoint is recorded.","unread":false},
+    {"id":"MSG-3","from":"Clinical Faculty Review Team","subject":"Simulation feedback released","preview":"Faculty-reviewed formative feedback is now available.","unread":true}
+  ],
+  "calendar": [
+    {"date":"2026-08-08","time":"09:00","title":"Virtual office hours","type":"ACADEMIC"},
+    {"date":"2026-08-12","time":"23:59","title":"Reasoning Map 1 due","type":"DEADLINE"},
+    {"date":"2026-08-15","time":"23:59","title":"Telehealth Consent Analysis due","type":"DEADLINE"},
+    {"date":"2026-08-18","time":"13:00","title":"Program governance review","type":"ADMIN"}
+  ],
+  "documents": [
+    {"id":"DOC-1","name":"Student Handbook Acknowledgment","category":"Policy","status":"SIGNED","retention":"STUDENT_FILE"},
+    {"id":"DOC-2","name":"Academic Integrity Agreement","category":"Policy","status":"SIGNED","retention":"STUDENT_FILE"},
+    {"id":"DOC-3","name":"Simulation Participation Disclosure","category":"Education","status":"ACKNOWLEDGED","retention":"COURSE_EVIDENCE"},
+    {"id":"DOC-4","name":"Program Progress Report","category":"Academic","status":"AVAILABLE","retention":"ACADEMIC_RECORD"}
+  ],
+  "billing": {
+    "accountStatus":"CURRENT",
+    "currentBalance":0,
+    "currency":"USD",
+    "nextDue":null,
+    "transactions":[
+      {"id":"PAY-DEMO-1","date":"2026-08-01","description":"Demo enrollment payment event","amount":0,"status":"SIMULATED"}
+    ]
+  },
+  "certificates": [
+    {"id":"CERT-ORIENT-1","title":"Platform Orientation","status":"EARNED","issued":"2026-08-02"},
+    {"id":"CERT-ETHICS-1","title":"Ethics Foundations","status":"IN_PROGRESS","issued":null}
+  ],
+  "support": {
+    "openTickets":1,
+    "tickets":[
+      {"id":"TKT-1001","subject":"Access to governance module","status":"OPEN","priority":"NORMAL","owner":"Support Persona"}
+    ],
+    "channels":["Knowledge Base","Support Ticket","Program Administration","Accessibility Support"]
+  },
+  "simulations": [
+    {"id":"SIM-101","title":"Communication and rapport scenario","level":"FOUNDATION","status":"AVAILABLE","requiresHumanReview":true,"description":"Practice structured communication, reflective listening, and documentation in an educational scenario."},
+    {"id":"SIM-201","title":"Ethics and boundary decision lab","level":"INTERMEDIATE","status":"AVAILABLE","requiresHumanReview":true,"description":"Analyze policy, consent, and professional-boundary considerations using a rubric."},
+    {"id":"SIM-301","title":"Program audit evidence exercise","level":"ADMIN","status":"AVAILABLE","requiresHumanReview":true,"description":"Assemble a simulated evidence trail for governance and quality review."}
+  ],
+  "admin": {
+    "enrollmentCounts":{"active":128,"pending":14,"completed":46,"suspended":2},
+    "facultyQueues":{"clinicalReviews":11,"gradeReviews":7,"policyApprovals":3},
+    "finance":{"postedRevenue":185400,"outstanding":12600,"refundReview":3},
+    "identity":{"activeAccounts":172,"stagedAccounts":9,"disabledAccounts":4},
+    "compliance":{"openFindings":5,"evidencePackages":24,"policiesDueForReview":4}
+  },
+  "system": {
+    "services":[
+      {"name":"Learning Portal","status":"HEALTHY","latencyMs":82},
+      {"name":"Workflow Engine","status":"HEALTHY","latencyMs":44},
+      {"name":"Evidence Export","status":"HEALTHY","latencyMs":61},
+      {"name":"Persona Gateway","status":"SIMULATION","latencyMs":0},
+      {"name":"Identity Adapter","status":"STAGED","latencyMs":0}
+    ],
+    "release":"2.0.0-rc.1",
+    "environment":"SIMULATION",
+    "auditMode":"APPEND_ONLY_DEMO"
+  }
+}

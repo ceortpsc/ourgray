@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "program": {
+    "legalDisplayName": "The Great Gray Horizon Counseling Center",
+    "parentCorporation": "Ross Tax Pro Software Co.",
+    "slogan": "Illuminating Pathways Beyond the Gray Horizon.",
+    "primaryActions": ["Enroll Now", "Launch Realtime AI Sandbox"],
+    "deliveryModel": "Distance learning with supervised AI-assisted educational simulations",
+    "serviceBoundary": "Education and workforce development only; human instructors retain authority over clinical and academic determinations."
+  },
+  "leadership": [
+    {
+      "name": "Condre Ross",
+      "titles": ["Chief Executive Officer", "Chief Financial Officer", "Program Director"],
+      "credentialStatus": "administrator_provided"
+    },
+    {
+      "name": "Dr. Jenifer Martin",
+      "titles": ["Chief Clinical Officer", "Clinical Persona Steward"],
+      "credentialStatus": "administrator_provided_pending_independent_verification",
+      "claimedCredential": "PhD"
+    }
+  ],
+  "personas": [
+    {
+      "id": "DR_JENIFER_MARTIN_PHD",
+      "displayName": "Dr. Martin Clinical Education Facilitator",
+      "stewardRole": "CLINICAL_OFFICER",
+      "functions": ["Case-based learning", "Reasoning-rubric feedback", "Ethics scenarios", "Reviewed literature summaries"],
+      "humanReviewRequired": true
+    },
+    {
+      "id": "CONDRE_ROSS_EXEC",
+      "displayName": "Program Governance and Operations Assistant",
+      "stewardRole": "EXECUTIVE_ADMIN",
+      "functions": ["Enrollment summaries", "Capacity modeling", "Compliance checklists", "Task orchestration"],
+      "humanReviewRequired": true
+    },
+    {
+      "id": "TEACHING_ASSISTANT",
+      "displayName": "Teaching and Administrative Assistant",
+      "stewardRole": "EXECUTIVE_ADMIN",
+      "functions": ["Deadline reminders", "Formative feedback", "Navigation support", "Task notices"],
+      "humanReviewRequired": true
+    }
+  ],
+  "roles": {
+    "EXECUTIVE_ADMIN": {"label": "Admin / Executive", "scope": ["Identity", "Curriculum governance", "Financial analytics", "Audit review", "Enrollment approval"]},
+    "CLINICAL_OFFICER": {"label": "Clinical Officer", "scope": ["Clinical curriculum", "Simulation stewardship", "Human review", "Ethics oversight"]},
+    "STUDENT": {"label": "Students / Trainees", "scope": ["Own profile", "Course workspaces", "AI simulations", "Grades and certificates"]},
+    "AUDITOR": {"label": "Accrediting Bodies & Auditors", "scope": ["Read-only identity", "Compliance evidence", "Evaluation artifacts", "Transaction evidence"]},
+    "DEVELOPER": {"label": "Developers & Engineering", "scope": ["Service principals", "Prompt wiring", "Infrastructure routes", "API logs"]},
+    "TESTER": {"label": "Testers / QA", "scope": ["Test personas", "Sandbox suites", "Mock payments", "Automated tests"]}
+  },
+  "learningNavigation": ["Streams", "Classwork", "AI Clinical Simulations", "People", "Grades"],
+  "modules": [
+    {"id": "COUNSEL-ADV-101", "title": "Advanced Counseling Reasoning", "status": "IN_PROGRESS", "assignment": "Structured assessment simulation", "disclaimer": "Educational simulation; instructor review required."},
+    {"id": "ETHICS-TELE-201", "title": "Ethics and Telehealth Protocols", "status": "AVAILABLE", "assignment": "Boundary and consent analysis", "disclaimer": "Human instructor review required."},
+    {"id": "GOV-AUDIT-301", "title": "Program Governance and Audit Readiness", "status": "AVAILABLE", "assignment": "Evidence package construction", "disclaimer": "Administrative learning module."}
+  ],
+  "workflow": ["APPLICATION_SUBMITTED", "PAYMENT_PENDING", "PAYMENT_VERIFIED", "APPROVAL_PENDING", "APPROVED", "IDENTITY_PROVISIONING", "IDENTITY_READY", "LMS_PROVISIONING", "ACTIVE"],
+  "automationControls": {
+    "payment": "Store provider references only.",
+    "identity": "Create staged accounts only after approval and server-side authorization.",
+    "email": "Send welcome communications only after identity and license checks.",
+    "ai": "Use server-issued sessions and keep provider credentials outside browser code.",
+    "audit": "Write append-only events with actor, timestamp, action, object, result and correlation ID.",
+    "retention": "Apply documented retention classes, legal holds and approved deletion workflows."
+  }
+}

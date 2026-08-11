@@ -1,0 +1,372 @@
+openapi: 3.0.3
+info:
+  title: Great Gray Horizon Enrollment and Learning API
+  version: 1.0.0
+  description: >-
+    Server-side API contract for candidate enrollment, verified payment events,
+    human approval, Microsoft Entra provisioning, learning workspace activation,
+    supervised persona sessions and audit evidence.
+servers:
+  - url: https://api.greatgrayhorizon.org
+    description: Production placeholder; activate only after DNS and deployment approval.
+  - url: https://api-staging.greatgrayhorizon.org
+    description: Staging placeholder.
+tags:
+  - name: Enrollment
+  - name: Payments
+  - name: Identity
+  - name: Learning
+  - name: Personas
+  - name: Audit
+paths:
+  /v1/enrollments:
+    post:
+      tags: [Enrollment]
+      summary: Submit a candidate enrollment
+      operationId: createEnrollment
+      security:
+        - candidateOAuth: [enrollment.write]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnrollmentRequest'
+      responses:
+        '202':
+          description: Enrollment accepted for payment and eligibility processing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /v1/enrollments/{enrollmentId}:
+    get:
+      tags: [Enrollment]
+      summary: Read an enrollment allowed by the caller's scope
+      operationId: getEnrollment
+      security:
+        - candidateOAuth: [enrollment.read]
+        - workforceOAuth: [enrollment.read.all]
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+      responses:
+        '200':
+          description: Enrollment record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/enrollments/{enrollmentId}/approval:
+    post:
+      tags: [Enrollment]
+      summary: Record an authorized human enrollment decision
+      operationId: approveEnrollment
+      security:
+        - workforceOAuth: [enrollment.approve]
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision, reason]
+              properties:
+                decision:
+                  type: string
+                  enum: [APPROVED, DECLINED, ACTION_REQUIRED]
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Decision recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+        '409': { $ref: '#/components/responses/Conflict' }
+  /v1/payments/webhook:
+    post:
+      tags: [Payments]
+      summary: Receive a signed payment-provider event
+      operationId: receivePaymentWebhook
+      description: >-
+        The implementation must preserve the unmodified request body for provider
+        signature verification and deduplicate by provider event ID.
+      security: []
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Event verified and accepted or previously processed.
+        '400':
+          description: Signature or event validation failed.
+  /v1/enrollments/{enrollmentId}/identity:
+    post:
+      tags: [Identity]
+      summary: Provision or reconcile a staged Microsoft Entra identity
+      operationId: provisionIdentity
+      security:
+        - workforceOAuth: [identity.provision]
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alias, domain, usageLocation]
+              properties:
+                alias: { type: string, pattern: '^[a-z0-9][a-z0-9._-]{0,63}$' }
+                domain: { type: string, format: hostname }
+                usageLocation: { type: string, minLength: 2, maxLength: 2 }
+                groupIds:
+                  type: array
+                  uniqueItems: true
+                  items: { type: string, format: uuid }
+      responses:
+        '202':
+          description: Identity provisioning queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvisioningJob'
+        '409': { $ref: '#/components/responses/Conflict' }
+  /v1/enrollments/{enrollmentId}/workspace:
+    post:
+      tags: [Learning]
+      summary: Initialize the learning workspace and assignments
+      operationId: provisionLearningWorkspace
+      security:
+        - workforceOAuth: [learning.provision]
+      parameters:
+        - $ref: '#/components/parameters/EnrollmentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [programId, personaAssignments]
+              properties:
+                programId: { type: string }
+                personaAssignments:
+                  type: array
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum: [DR_JENIFER_MARTIN_PHD, CONDRE_ROSS_EXEC, TEACHING_ASSISTANT]
+      responses:
+        '202':
+          description: Workspace provisioning queued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvisioningJob'
+  /v1/persona-sessions:
+    post:
+      tags: [Personas]
+      summary: Create a supervised educational persona session
+      operationId: createPersonaSession
+      security:
+        - candidateOAuth: [simulation.run]
+        - workforceOAuth: [simulation.run]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [personaId, courseId, purpose]
+              properties:
+                personaId:
+                  type: string
+                  enum: [DR_JENIFER_MARTIN_PHD, CONDRE_ROSS_EXEC, TEACHING_ASSISTANT]
+                courseId: { type: string }
+                purpose:
+                  type: string
+                  enum: [EDUCATIONAL_SIMULATION, FORMATIVE_FEEDBACK, NAVIGATION_SUPPORT]
+                disclosureAccepted: { type: boolean }
+      responses:
+        '201':
+          description: Session broker authorization created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionId, expiresAt, humanReviewRequired]
+                properties:
+                  sessionId: { type: string }
+                  expiresAt: { type: string, format: date-time }
+                  clientSessionToken:
+                    type: string
+                    writeOnly: true
+                    description: Short-lived broker-issued token; never a provider API key.
+                  humanReviewRequired: { type: boolean, example: true }
+        '403':
+          description: RBAC or persona policy denied the request.
+  /v1/audit/events:
+    get:
+      tags: [Audit]
+      summary: Query evidence events under auditor scope
+      operationId: listAuditEvents
+      security:
+        - workforceOAuth: [audit.read]
+      parameters:
+        - name: correlationId
+          in: query
+          schema: { type: string }
+        - name: after
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+      responses:
+        '200':
+          description: Audit event page.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/AuditEvent' }
+components:
+  parameters:
+    EnrollmentId:
+      name: enrollmentId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^ENR-[A-Z0-9-]+$' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 16, maxLength: 200 }
+  responses:
+    ValidationError:
+      description: Request failed validation.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Workflow state, duplicate or idempotency conflict.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Resource not found or not visible to the caller.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    CreateEnrollmentRequest:
+      type: object
+      required: [applicantName, email, programId, paymentSessionReference]
+      additionalProperties: false
+      properties:
+        applicantName: { type: string, minLength: 2, maxLength: 200 }
+        email: { type: string, format: email }
+        programId: { type: string, minLength: 2, maxLength: 100 }
+        paymentSessionReference:
+          type: string
+          description: Provider-hosted session reference; never raw payment credentials.
+        consentVersion: { type: string }
+    Enrollment:
+      type: object
+      required: [enrollmentId, candidateId, status, programId, createdAt, updatedAt]
+      properties:
+        enrollmentId: { type: string }
+        candidateId: { type: string }
+        status:
+          type: string
+          enum: [APPLICATION_SUBMITTED, PAYMENT_PENDING, PAYMENT_VERIFIED, APPROVAL_PENDING, APPROVED, IDENTITY_PROVISIONING, IDENTITY_READY, LMS_PROVISIONING, ACTIVE, SUSPENDED, COMPLETED, DECLINED, ACTION_REQUIRED]
+        programId: { type: string }
+        paymentStatus: { type: string, enum: [PENDING, VERIFIED, FAILED, REFUNDED] }
+        identityStatus: { type: string, enum: [NOT_STARTED, PENDING, READY, FAILED] }
+        workspaceStatus: { type: string, enum: [NOT_STARTED, PENDING, ACTIVE, FAILED] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProvisioningJob:
+      type: object
+      required: [jobId, status, correlationId]
+      properties:
+        jobId: { type: string }
+        status: { type: string, enum: [QUEUED, RUNNING, SUCCEEDED, FAILED, DEAD_LETTER] }
+        correlationId: { type: string }
+    AuditEvent:
+      type: object
+      required: [eventId, occurredAt, actorId, actorRole, action, objectType, objectId, result, correlationId]
+      properties:
+        eventId: { type: string }
+        occurredAt: { type: string, format: date-time }
+        actorId: { type: string }
+        actorRole: { type: string }
+        action: { type: string }
+        objectType: { type: string }
+        objectId: { type: string }
+        result: { type: string }
+        correlationId: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+    Problem:
+      type: object
+      required: [type, title, status, traceId]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        traceId: { type: string }
+  securitySchemes:
+    candidateOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/common/oauth2/v2.0/token
+          scopes:
+            enrollment.read: Read the signed-in candidate's enrollment.
+            enrollment.write: Submit and update the signed-in candidate's enrollment.
+            simulation.run: Run assigned educational simulations.
+    workforceOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/eb6c9e4e-0943-4ada-b473-fbafda77eb27/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/eb6c9e4e-0943-4ada-b473-fbafda77eb27/oauth2/v2.0/token
+          scopes:
+            enrollment.read.all: Read authorized enrollment records.
+            enrollment.approve: Record authorized enrollment decisions.
+            identity.provision: Queue approved identity provisioning.
+            learning.provision: Queue learning-workspace provisioning.
+            simulation.run: Run educational simulations.
+            audit.read: Read approved audit evidence.

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="The Great Gray Horizon Counseling Center candidate operations portal powered by Ross Tax Pro Software Co." />
+  <title>The Great Gray Horizon Candidate Portal</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">GGH</div>
+        <div><strong>The Great Gray Horizon</strong><span>Candidate Operations</span></div>
+      </div>
+      <nav id="nav"></nav>
+      <a class="admin-link" href="./candidate-access.html">Candidate Access &amp; Application</a>
+      <a class="admin-link" href="./learning-portal.html">Distance Learning &amp; AI Sandbox</a>
+      <a class="admin-link" href="./terminal.html">Terminal &amp; Environment Console</a>
+      <a class="admin-link" href="./onboarding-admin.html">Employer Onboarding Admin</a>
+      <a class="admin-link" href="./operations-engine.html">Platform Engine Operations</a>
+      <div class="powered">Powered by Ross Tax Pro Software Co.<br /><small>Innovator of All Things Software and Development</small></div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <div><p class="eyebrow">Corporate Candidate Management</p><h1 id="page-title">Executive Overview</h1></div>
+        <div class="session-controls">
+          <label>Demo RBAC role
+            <select id="role-select" aria-label="Select demonstration RBAC role"></select>
+          </label>
+          <span id="actor-label" class="actor-label"></span>
+          <div class="status-chip">LIVE · AUDITED</div>
+        </div>
+      </header>
+      <section id="app" class="content" aria-live="polite"></section>
+    </main>
+  </div>
+  <script src="./app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "platform": "The Great Gray Horizon Counseling Center",
+  "parentCorporation": "Ross Tax Pro Software Co.",
+  "environment": "demonstration",
+  "engines": {
+    "workflow": {
+      "enabled": true,
+      "maxConcurrentJobs": 4,
+      "retryPolicy": {
+        "maxAttempts": 3,
+        "baseDelayMs": 1000,
+        "maxDelayMs": 30000,
+        "backoff": "exponential"
+      }
+    },
+    "export": {
+      "enabled": true,
+      "formats": ["json", "csv", "ndjson", "xhtml"],
+      "includeManifest": true,
+      "includeChecksum": true,
+      "defaultLocale": "en-US",
+      "defaultTimezone": "UTC"
+    },
+    "telemetry": {
+      "enabled": true,
+      "retentionLimit": 500,
+      "healthIntervalSeconds": 60,
+      "redactSensitiveFields": true
+    },
+    "aiAssist": {
+      "enabled": true,
+      "mode": "policy-gated",
+      "provider": "none",
+      "allowSensitiveData": false,
+      "requireHumanApproval": true,
+      "allowedUseCases": [
+        "summarization",
+        "classification",
+        "drafting",
+        "workflow-recommendation",
+        "data-quality-review"
+      ],
+      "blockedUseCases": [
+        "autonomous-employment-decision",
+        "protected-trait-inference",
+        "medical-diagnosis",
+        "credential-bypass",
+        "background-screening-decision"
+      ]
+    }
+  },
+  "controls": {
+    "serverAuthorizationRequired": true,
+    "immutableAuditRequiredInProduction": true,
+    "secretsInBrowserProhibited": true,
+    "providerCredentialsRequiredForLiveAI": true,
+    "durableQueueRequiredForProduction": true,
+    "databaseRequiredForProduction": true
+  }
+}

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="The Great Gray Horizon Counseling Center full responsive LMS and operational simulation portal." />
+  <meta name="theme-color" content="#0b1f3a" />
+  <title>Great Gray Horizon | Full LMS & Operations Simulation</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./learning-portal.css" />
+</head>
+<body>
+  <div class="lms-app" id="lms-app">
+    <header class="lms-topbar">
+      <button class="icon-button mobile-only" id="mobile-nav-toggle" aria-label="Toggle navigation">☰</button>
+      <a class="lms-brand" href="./learning-portal.html" aria-label="Great Gray Horizon learning portal home">
+        <span class="brand-mark">GGH</span>
+        <span class="brand-copy">
+          <strong>The Great Gray Horizon</strong>
+          <small>Learning & Operations Platform</small>
+        </span>
+      </a>
+      <div class="global-search-wrap">
+        <span aria-hidden="true">⌕</span>
+        <input id="global-search" type="search" placeholder="Search courses, assignments, people, documents, tickets..." autocomplete="off" />
+      </div>
+      <div class="topbar-actions">
+        <a class="icon-button terminal-shortcut" href="./terminal.html" title="Terminal & environment console" aria-label="Open terminal and environment console">⌘</a>
+        <button class="icon-button" id="quick-create" title="Quick actions">＋</button>
+        <button class="icon-button" id="notifications-button" title="Notifications">🔔<span class="notification-dot" id="notification-count">3</span></button>
+        <button class="profile-button" id="profile-button">
+          <span class="profile-avatar">CR</span>
+          <span><strong id="profile-role-label">Executive Admin</strong><small id="profile-environment">Simulation</small></span>
+        </button>
+      </div>
+    </header>
+
+    <aside class="lms-sidebar" id="lms-sidebar">
+      <div class="sidebar-role-switcher">
+        <label for="learning-role">Simulated portal facing</label>
+        <select id="learning-role"></select>
+      </div>
+      <nav id="primary-navigation" class="primary-navigation" aria-label="LMS primary navigation"></nav>
+      <div class="sidebar-divider"></div>
+      <nav class="secondary-navigation" aria-label="Related portals">
+        <a href="./terminal.html">Terminal &amp; Environment</a>
+        <a href="./candidate-access.html">Candidate Application</a>
+        <a href="./onboarding-admin.html">Onboarding Admin</a>
+        <a href="./operations-engine.html">Engine Operations</a>
+        <a href="./index.html">Corporate Operations</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="system-status-dot"></span>
+        <span><strong>Simulation environment</strong><small>No live clinical, payment, or identity provider calls.</small></span>
+      </div>
+    </aside>
+
+    <main class="lms-main">
+      <section class="page-header">
+        <div>
+          <p class="eyebrow">Powered by Ross Tax Pro Software Co.</p>
+          <h1 id="page-heading">Dashboard</h1>
+          <p id="page-subheading">Illuminating Pathways Beyond the Gray Horizon.</p>
+        </div>
+        <div class="page-header-actions">
+          <a class="button secondary" href="./terminal.html">Open Terminal</a>
+          <button class="button secondary" id="export-current-view">Export view</button>
+          <button class="button" id="launch-assist">AI Assist Sandbox</button>
+        </div>
+      </section>
+
+      <section id="learning-alert" aria-live="polite"></section>
+      <section id="workspace" class="workspace" aria-live="polite"></section>
+    </main>
+
+    <aside class="lms-right-rail" id="right-rail">
+      <section class="rail-card">
+        <div class="rail-title"><h2>Today</h2><span id="today-date"></span></div>
+        <div id="today-agenda"></div>
+      </section>
+      <section class="rail-card">
+        <div class="rail-title"><h2>Open tasks</h2><span id="rail-task-count" class="badge warn"></span></div>
+        <div id="rail-tasks"></div>
+      </section>
+      <section class="rail-card">
+        <div class="rail-title"><h2>Platform status</h2><span class="badge ok">ONLINE</span></div>
+        <div id="rail-system-health"></div>
+      </section>
+      <section class="rail-card assist-disclosure">
+        <strong>AI educational-use boundary</strong>
+        <p>AI interactions in this simulation are educational and administrative. Human reviewers retain authority over grades, credential verification, clinical competency, employment decisions, and regulated actions.</p>
+      </section>
+    </aside>
+  </div>
+
+  <dialog id="modal">
+    <form method="dialog" class="modal-card">
+      <header><h2 id="modal-title">Details</h2><button class="icon-button" value="cancel" aria-label="Close">×</button></header>
+      <div id="modal-body"></div>
+      <footer><button class="button secondary" value="cancel">Close</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="assist-modal">
+    <form method="dialog" class="modal-card assist-modal-card">
+      <header><div><p class="eyebrow">Supervised AI simulation</p><h2>Realtime AI Sandbox</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></header>
+      <div class="assist-disclosure callout"><strong>Training only.</strong> This sandbox does not diagnose, treat, prescribe, independently grade, or make employment decisions.</div>
+      <div class="chat-window" id="chat-window"></div>
+      <div class="chat-composer">
+        <textarea id="chat-input" rows="3" placeholder="Ask for a study explanation, rubric feedback, course navigation, governance checklist, or simulated administrative help..."></textarea>
+        <button class="button" id="send-chat" type="button">Send</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast-region" aria-live="polite"></div>
+  <script src="./learning-portal.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "directoryName": "Default Directory",
+  "tenantId": "eb6c9e4e-0943-4ada-b473-fbafda77eb27",
+  "primaryDomain": "condreroutlook626.onmicrosoft.com",
+  "entraLicense": "Microsoft Entra ID Free",
+  "inventory": {
+    "users": 1,
+    "groups": 0,
+    "applications": 1,
+    "devices": null
+  },
+  "capabilityState": {
+    "identityProvisioning": "AVAILABLE",
+    "outlookMailboxProvisioning": "LICENSE_REQUIRED",
+    "groupAssignment": "NO_GROUPS_CONFIGURED",
+    "conditionalAccess": "LICENSE_REVIEW_REQUIRED"
+  },
+  "source": "Administrator-provided tenant summary",
+  "updatedAt": "2026-08-05T05:19:00Z"
+}
